@@ -1,0 +1,26 @@
+Subject: Addressing Data Duplication Issue in Facility Booking Units
+
+Dear Stakeholders,
+
+I hope this message finds you well.
+
+We have identified and addressed a recent issue related to data duplication in our facility booking system. Previously, a single facility with multiple booking units could result in duplicate data entries, leading to inconsistencies and confusion in our records.
+
+To resolve this, we have updated our SQL query to aggregate the booking units for each facility into a single line. This change ensures that data for each facility is consolidated, eliminating duplicates and providing a clearer and more accurate representation of our booking data.
+
+Key Changes Implemented:
+
+	1.	Aggregation of Booking Units: The SQL query now aggregates booking units per facility, displaying them in a single, comprehensive entry.
+	2.	Data Consistency: This adjustment enhances data consistency, making it easier to analyze and manage bookings.
+	3.	Improved Reporting: Reports generated from this updated query will now reflect accurate data without redundancies, aiding in better decision-making.
+
+We are confident that this change will improve the accuracy and reliability of our booking system. Should you have any questions or require further clarification, please do not hesitate to reach out.
+
+Thank you for your attention and continued support.
+
+Best regards,
+
+[Your Name]
+[Your Position]
+[Your Contact Information]
+[Company Name]
