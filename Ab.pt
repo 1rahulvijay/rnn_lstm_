@@ -1,0 +1,16 @@
+# Convert specific columns to numeric type
+numeric_columns = ['LIMIT_AMOUNT_NEW', 'LIMIT_AMOUNT_OLD', 'DAYLIGHT_OD_LIMIT_NEW', 'DAYLIGHT_OD_LIMIT_OLD']
+merged_df[numeric_columns] = merged_df[numeric_columns].apply(pd.to_numeric, errors='coerce')
+
+# Now apply your change_conditions with corrected numeric columns
+change_conditions = (
+    (merged_df["RECORD_STAT_NEW"] == "0") &
+    (merged_df["KEY_REC"].notna()) &
+    ((merged_df["LIMIT_AMOUNT_NEW"] - merged_df["LIMIT_AMOUNT_OLD"]).fillna(0) != 0) &
+    ((merged_df["DAYLIGHT_OD_LIMIT_NEW"] - merged_df["DAYLIGHT_OD_LIMIT_OLD"]).fillna(0) != 0) &
+    (merged_df["AVAILABILITY_FLAG_NEW"] != merged_df["AVAILABILITY_FLAG_OLD"]) &
+    (merged_df["LINE_CURRENCY_NEW"] != merged_df["LINE_CURRENCY_OLD"])
+)
+
+# Filter based on change_conditions
+changed_lines = merged_df[change_conditions]
