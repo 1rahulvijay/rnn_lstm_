@@ -1,32 +1,31 @@
 import pandas as pd
 from datetime import datetime
 
-# Sample DataFrame creation for demonstration
-data = {
-    'LIAB_ID': [1, 2, 3],
-    'LINE_CD': ['A', 'B', 'C'],
-    'LINE_SERIAL': [123, 456, 789],
-    'MAIN_LINE': ['M1', 'M2', 'M3'],
-    'AVAILABILITY_FLAG': ['Y', 'N', 'Y'],
-    'LIMIT_AMOUNT': [1000, 2000, 3000],
-    'CHECKER_DT_STAMP': [datetime(2020, 1, 1), datetime(2021, 1, 1), datetime(2022, 1, 1)],
-    'MAKER_ID': ['MK1', 'MK2', 'MK3'],
-    'MANUAL_LINE': ['N', None, 'Y'],
-    'RECORD_STAT': ['o', 'o', 'n']
-}
+# Assuming data is already loaded into a DataFrame
+# HU_tbl_LIMITS = pd.read_csv('HU_tbl_LIMITS.csv')
 
-df = pd.DataFrame(data)
-
-# Applying the filter conditions
-now = datetime.now()
-filtered_df = df[
-    (df['RECORD_STAT'] == 'o') &
-    (df['CHECKER_DT_STAMP'] < now - pd.DateOffset(days=(datetime(1899, 12, 30) - datetime(1970, 1, 1)).days)) &
-    ((df['MANUAL_LINE'] == 'N') | df['MANUAL_LINE'].isnull())
+# Filter conditions based on the SQL query
+filtered_df = HU_tbl_LIMITS[
+    (HU_tbl_LIMITS['RECORD_STAT'] == "0") &
+    (HU_tbl_LIMITS['CHECKER_DT_STAMP'] < (datetime.now() - pd.Timedelta(days=12*30*24*60))) &  # Simulating the given date
+    ((HU_tbl_LIMITS['MANUAL_LINE'] == "N") | (HU_tbl_LIMITS['MANUAL_LINE'].isnull()))
 ]
 
-# Sorting the result by 'LIAB_ID'
-filtered_df = filtered_df.sort_values(by='LIAB_ID')
+# Select the required columns
+selected_df = filtered_df[[
+    'LIAB_ID',
+    'LINE_CD',
+    'LINE_SERIAL',
+    'MAIN_LINE',
+    'AVAILABILITY_FLAG',
+    'LIMIT_AMOUNT',
+    'RECORD_STAT',
+    'CHECKER_DT_STAMP',
+    'MAKER_ID',
+    'MANUAL_LINE'
+]]
 
-# Display the filtered and sorted DataFrame
-print(filtered_df)
+# Sort the DataFrame by 'LIAB_ID'
+result_df = selected_df.sort_values(by='LIAB_ID')
+
+print(result_df)
