@@ -1,0 +1,10 @@
+'**'SELECT [HU_Daily-6-AccountWithChangedLineID].LIAB_ID, [HU_Daily-6-AccountWithChangedLineID].CUST_NO, [HU_Daily-6-AccountWithChangedLineID].CUST_AC_NO, [HU_Daily-6-AccountWithChangedLineID].ACY_AVL_BAL,
+[HU_Daily-6-AccountWithChangedLineID]. [D-1],
+[HU_Daily-6-AccountWithChangedLineID]. TODAY, [HU_b]_LIMITS_D-1] •LIMIT_AMOUNT AS [OLD-LIMIT], [HU tb1_ LIMITS_D-11. LINE_CURRENCY AS CCY_OLD, HU_tb1_ LIMITS. LIMIT_AMOUNT AS [NEW LIMIT],
+HU_+bI_ LIMITS. LINE_CURRENCY AS CCY_NEW, [NEW LIMIT] - [OLD-LIMIT] AS DIFF_ LMT, [HU tb1_ LTMITS D-11 - DAYLIGHT OD LIMIT AS [OLD DOL, HU_Eb1 LIMITS-DAYLIGHT_OD_ LIMIT AS [NEW DOL], [NEW DOL]-[OLD DOL] AS DIFF DOL, [HU_ EbI_LIMITS_D-11.AVATLABILITY_FLAG AS [OLD AVAIL],
+HU_tb1_LIMITS.AVAILABILITY_FLAG AS [NEW AVAIL]
+FROM ([HU_Daily-6-AccountWithChangedLineID] INNER JOIN HU_tbl_LIMITS
+ON ([HU Daily-6-AccountWithChangedLineID]. LIAB_ID = HU_ tbl_ LIMITS. LIAB_ ID)
+AND ([HU_Daily-6-AccountWithChangedLineID].KEY2 = HU_tb1_LIMITS.KEY)) LEFT JOIN [HU_+bI_LIMITS_D-11
+ON ([HU Daily-6-AccountWithChangedLineID]. LIAB_ID = [HU_ tb1_ LIMITS_D-1]. LIAB_ID)
+AND ([HU_ Daily-6-AccountWithChangedLineID].KEY1 = [HU_ tb1_ LIMITS_D-1]-KEY);
