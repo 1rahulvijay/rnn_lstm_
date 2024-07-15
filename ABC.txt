@@ -1,34 +1,39 @@
 import pandas as pd
 
-# Load the data into DataFrames (assuming CSV files, replace with your actual data source)
-hu_acc_post = pd.read_csv('HU_ACC_POST.csv')
-hu_acc_d1 = pd.read_csv('HU_ACC_D-1.csv')
+# Assuming HU_ACC_POST and HU_ACC_D-1 are already loaded into DataFrames
+# Example:
+# HU_ACC_POST = pd.read_csv('HU_ACC_POST.csv')
+# HU_ACC_D_1 = pd.read_csv('HU_ACC_D_1.csv')
 
-# Perform the left join
-merged_df = hu_acc_post.merge(hu_acc_d1, how='left', left_on='CUST_AC_NO', right_on='CUST_AC_NO', suffixes=('_post', '_d1'))
+# Left join on 'CUST_AC_NO'
+merged_df = pd.merge(HU_ACC_POST, HU_ACC_D_1, how='left', left_on='CUST_AC_NO', right_on='CUST_AC_NO', suffixes=('', '_D1'))
 
-# Apply the filtering conditions
+# Filtering the data as per the given SQL query conditions
 filtered_df = merged_df[
-    (merged_df['LINE_ID_post'] != merged_df['LINE_ID_d1']) |
-    (merged_df['LINE_ID_d1'].isnull() & merged_df['LINE_ID_post'].notnull()) |
-    (merged_df['LINE_ID_d1'].notnull() & merged_df['LINE_ID_post'].isnull())
+    (merged_df['LINE_ID'] != merged_df['LINE_ID_D1']) |
+    ((merged_df['LINE_ID_D1'].isnull()) & (~merged_df['LINE_ID'].isnull())) |
+    ((~merged_df['LINE_ID_D1'].isnull()) & (merged_df['LINE_ID'].isnull()))
 ]
 
-# Create the 'KEY1' and 'KEY2' columns
-filtered_df['KEY1'] = filtered_df['LIAB_ID_d1'].astype(str) + filtered_df['LINE_ID_d1'].astype(str)
-filtered_df['KEY2'] = filtered_df['LIAB_ID_post'].astype(str) + filtered_df['LINE_ID_post'].astype(str)
+# Selecting the required columns
+result_df = filtered_df[[
+    'LIAB_ID',
+    'CUST_NO',
+    'CUST_AC_NO',
+    'LINE_ID_D1',
+    'LINE_ID',
+    'LIAB_ID_D1',
+    'ACY_AVL_BAL'
+]]
 
-# Select the desired columns
-selected_columns = [
-    'LIAB_ID_post', 'CUST_NO_post', 'CUST_AC_NO', 'LINE_ID_d1', 'LINE_ID_post', 'KEY1', 'KEY2', 'ACY_AVL_BAL_post'
-]
+# Creating the KEY1 and KEY2 columns
+result_df['KEY1'] = result_df['LIAB_ID_D1'].astype(str) + result_df['LINE_ID_D1'].astype(str)
+result_df['KEY2'] = result_df['LIAB_ID'].astype(str) + result_df['LINE_ID'].astype(str)
 
-result_df = filtered_df[selected_columns]
+# Renaming columns to match the SQL query output
+result_df.rename(columns={
+    'LIAB_ID_D1': 'D-1',
+    'LINE_ID': 'TODAY'
+}, inplace=True)
 
-# Rename the columns to match the SQL output
-result_df.columns = [
-    'LIAB_ID', 'CUST_NO', 'CUST_AC_NO', 'D-1', 'TODAY', 'KEY1', 'KEY2', 'ACY_AVL_BAL'
-]
-
-# Display the resulting DataFrame
 print(result_df)
