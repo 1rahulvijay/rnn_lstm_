@@ -1,28 +1,60 @@
 import pandas as pd
 
-# Assuming the data is loaded into pandas DataFrames
-hu_daily_account_changed = pd.read_csv('hu_daily_account_changed.csv')  # Replace with actual data loading method
-hu_limits = pd.read_csv('hu_limits.csv')  # Replace with actual data loading method
-hu_limits_d1 = pd.read_csv('hu_limits_d1.csv')  # Replace with actual data loading method
+# Assuming data is already loaded into DataFrames
+# HU_Daily_6_AccountWithChangedLineID = pd.read_csv('HU_Daily_6_AccountWithChangedLineID.csv')
+# HU_tb1_LIMITS = pd.read_csv('HU_tb1_LIMITS.csv')
+# HU_tb1_LIMITS_D_1 = pd.read_csv('HU_tb1_LIMITS_D_1.csv')
 
-# Perform the inner join on LIAB_ID and KEY2
-merged_df1 = hu_daily_account_changed.merge(hu_limits, how='inner', left_on=['LIAB_ID', 'KEY2'], right_on=['LIAB_ID', 'KEY'])
+# Inner join on 'LIAB_ID' and 'KEY2'
+merged_df_1 = pd.merge(
+    HU_Daily_6_AccountWithChangedLineID,
+    HU_tb1_LIMITS,
+    how='inner',
+    left_on=['LIAB_ID', 'KEY2'],
+    right_on=['LIAB_ID', 'KEY']
+)
 
-# Perform the left join on LIAB_ID and KEY1
-merged_df = merged_df1.merge(hu_limits_d1, how='left', left_on=['LIAB_ID', 'KEY1'], right_on=['LIAB_ID', 'KEY'], suffixes=('', '_d1'))
+# Left join with 'HU_tb1_LIMITS_D_1' on 'LIAB_ID' and 'KEY1'
+merged_df_2 = pd.merge(
+    merged_df_1,
+    HU_tb1_LIMITS_D_1,
+    how='left',
+    left_on=['LIAB_ID', 'KEY1'],
+    right_on=['LIAB_ID', 'KEY']
+)
 
-# Create the additional columns for differences
-merged_df['DIFF_LMT'] = merged_df['LIMIT_AMOUNT'] - merged_df['LIMIT_AMOUNT_d1']
-merged_df['DIFF_DOL'] = merged_df['DAYLIGHT_OD_LIMIT'] - merged_df['DAYLIGHT_OD_LIMIT_d1']
+# Select and rename columns as required
+result_df = merged_df_2[[
+    'LIAB_ID',
+    'CUST_NO',
+    'CUST_AC_NO',
+    'ACY_AVL_BAL',
+    'D-1',
+    'TODAY',
+    'LIMIT_AMOUNT_y',  # New limit
+    'LINE_CURRENCY_y',  # CCY_NEW
+    'LIMIT_AMOUNT_x',  # Old limit
+    'LINE_CURRENCY_x',  # CCY_OLD
+    'DAYLIGHT_OD_LIMIT_x',  # OLD DOL
+    'DAYLIGHT_OD_LIMIT_y',  # NEW DOL
+    'AVAILABILITY_FLAG_x',  # OLD AVAIL
+    'AVAILABILITY_FLAG_y'  # NEW AVAIL
+]]
 
-# Select and rename the required columns
-result_df = merged_df[['LIAB_ID', 'CUST_NO', 'CUST_AC_NO', 'ACY_AVL_BAL', 'D-1', 'TODAY',
-                       'LIMIT_AMOUNT_d1', 'LINE_CURRENCY_d1', 'LIMIT_AMOUNT', 'LINE_CURRENCY',
-                       'DIFF_LMT', 'DAYLIGHT_OD_LIMIT_d1', 'DAYLIGHT_OD_LIMIT', 'DIFF_DOL',
-                       'AVAILABILITY_FLAG_d1', 'AVAILABILITY_FLAG']]
+# Calculate the additional required columns
+result_df['DIFF_LMT'] = result_df['LIMIT_AMOUNT_y'] - result_df['LIMIT_AMOUNT_x']
+result_df['DIFF_DOL'] = result_df['DAYLIGHT_OD_LIMIT_y'] - result_df['DAYLIGHT_OD_LIMIT_x']
 
-result_df.columns = ['LIAB_ID', 'CUST_NO', 'CUST_AC_NO', 'ACY_AVL_BAL', 'D-1', 'TODAY',
-                     'OLD_LIMIT', 'CCY_OLD', 'NEW_LIMIT', 'CCY_NEW', 'DIFF_LMT', 'OLD_DOL',
-                     'NEW_DOL', 'DIFF_DOL', 'OLD_AVAIL', 'NEW_AVAIL']
+# Renaming the columns to match the SQL query output
+result_df.rename(columns={
+    'LIMIT_AMOUNT_x': 'OLD_LIMIT',
+    'LINE_CURRENCY_x': 'CCY_OLD',
+    'LIMIT_AMOUNT_y': 'NEW_LIMIT',
+    'LINE_CURRENCY_y': 'CCY_NEW',
+    'DAYLIGHT_OD_LIMIT_x': 'OLD_DOL',
+    'DAYLIGHT_OD_LIMIT_y': 'NEW_DOL',
+    'AVAILABILITY_FLAG_x': 'OLD_AVAIL',
+    'AVAILABILITY_FLAG_y': 'NEW_AVAIL'
+}, inplace=True)
 
 print(result_df)
