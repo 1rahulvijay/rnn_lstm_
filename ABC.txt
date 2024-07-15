@@ -1,39 +1,32 @@
 import pandas as pd
+from datetime import datetime
 
-# Assuming HU_ACC_POST and HU_ACC_D-1 are already loaded into DataFrames
-# Example:
-# HU_ACC_POST = pd.read_csv('HU_ACC_POST.csv')
-# HU_ACC_D_1 = pd.read_csv('HU_ACC_D_1.csv')
+# Sample DataFrame creation for demonstration
+data = {
+    'LIAB_ID': [1, 2, 3],
+    'LINE_CD': ['A', 'B', 'C'],
+    'LINE_SERIAL': [123, 456, 789],
+    'MAIN_LINE': ['M1', 'M2', 'M3'],
+    'AVAILABILITY_FLAG': ['Y', 'N', 'Y'],
+    'LIMIT_AMOUNT': [1000, 2000, 3000],
+    'CHECKER_DT_STAMP': [datetime(2020, 1, 1), datetime(2021, 1, 1), datetime(2022, 1, 1)],
+    'MAKER_ID': ['MK1', 'MK2', 'MK3'],
+    'MANUAL_LINE': ['N', None, 'Y'],
+    'RECORD_STAT': ['o', 'o', 'n']
+}
 
-# Left join on 'CUST_AC_NO'
-merged_df = pd.merge(HU_ACC_POST, HU_ACC_D_1, how='left', left_on='CUST_AC_NO', right_on='CUST_AC_NO', suffixes=('', '_D1'))
+df = pd.DataFrame(data)
 
-# Filtering the data as per the given SQL query conditions
-filtered_df = merged_df[
-    (merged_df['LINE_ID'] != merged_df['LINE_ID_D1']) |
-    ((merged_df['LINE_ID_D1'].isnull()) & (~merged_df['LINE_ID'].isnull())) |
-    ((~merged_df['LINE_ID_D1'].isnull()) & (merged_df['LINE_ID'].isnull()))
+# Applying the filter conditions
+now = datetime.now()
+filtered_df = df[
+    (df['RECORD_STAT'] == 'o') &
+    (df['CHECKER_DT_STAMP'] < now - pd.DateOffset(days=(datetime(1899, 12, 30) - datetime(1970, 1, 1)).days)) &
+    ((df['MANUAL_LINE'] == 'N') | df['MANUAL_LINE'].isnull())
 ]
 
-# Selecting the required columns
-result_df = filtered_df[[
-    'LIAB_ID',
-    'CUST_NO',
-    'CUST_AC_NO',
-    'LINE_ID_D1',
-    'LINE_ID',
-    'LIAB_ID_D1',
-    'ACY_AVL_BAL'
-]]
+# Sorting the result by 'LIAB_ID'
+filtered_df = filtered_df.sort_values(by='LIAB_ID')
 
-# Creating the KEY1 and KEY2 columns
-result_df['KEY1'] = result_df['LIAB_ID_D1'].astype(str) + result_df['LINE_ID_D1'].astype(str)
-result_df['KEY2'] = result_df['LIAB_ID'].astype(str) + result_df['LINE_ID'].astype(str)
-
-# Renaming columns to match the SQL query output
-result_df.rename(columns={
-    'LIAB_ID_D1': 'D-1',
-    'LINE_ID': 'TODAY'
-}, inplace=True)
-
-print(result_df)
+# Display the filtered and sorted DataFrame
+print(filtered_df)
