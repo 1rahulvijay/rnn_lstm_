@@ -1,33 +1,34 @@
 import pandas as pd
 
-# Load the data into a DataFrame (assuming a CSV file, replace with your actual data source)
-df = pd.read_csv('HU_LIMITS_POST.csv')
+# Load the data into DataFrames (assuming CSV files, replace with your actual data source)
+hu_acc_post = pd.read_csv('HU_ACC_POST.csv')
+hu_acc_d1 = pd.read_csv('HU_ACC_D-1.csv')
+
+# Perform the left join
+merged_df = hu_acc_post.merge(hu_acc_d1, how='left', left_on='CUST_AC_NO', right_on='CUST_AC_NO', suffixes=('_post', '_d1'))
 
 # Apply the filtering conditions
-filtered_df = df[
-    (
-        (df['LIMIT_AMOUNT'] > 0) &
-        (df['MAKER_ID'] != 'RAPUPLD') &
-        (df['RECORD_STAT'] == 'O')
-    ) |
-    (
-        (df['DAYLIGHT_OD_LIMIT'] > 0) &
-        (df['MAKER_ID'] != 'RAPUPLD') &
-        (df['RECORD_STAT'] == '0')
-    )
+filtered_df = merged_df[
+    (merged_df['LINE_ID_post'] != merged_df['LINE_ID_d1']) |
+    (merged_df['LINE_ID_d1'].isnull() & merged_df['LINE_ID_post'].notnull()) |
+    (merged_df['LINE_ID_d1'].notnull() & merged_df['LINE_ID_post'].isnull())
 ]
 
-# Create the 'KEY' column by concatenating 'LIAB_ID', 'LINE_CD', and 'LINE_SERIAL'
-filtered_df['KEY'] = filtered_df['LIAB_ID'].astype(str) + filtered_df['LINE_CD'].astype(str) + filtered_df['LINE_SERIAL'].astype(str)
+# Create the 'KEY1' and 'KEY2' columns
+filtered_df['KEY1'] = filtered_df['LIAB_ID_d1'].astype(str) + filtered_df['LINE_ID_d1'].astype(str)
+filtered_df['KEY2'] = filtered_df['LIAB_ID_post'].astype(str) + filtered_df['LINE_ID_post'].astype(str)
 
 # Select the desired columns
 selected_columns = [
-    'LIAB_ID', 'LINE_CD', 'LINE_SERIAL', 'MAIN_LINE', 'AVAILABILITY_FLAG', 'UTILISATION',
-    'LIMIT_AMOUNT', 'DAYLIGHT_OD_LIMIT', 'INTERNAL_REMARKS', 'MAKER_ID', 'KEY', 'RECORD_STAT',
-    'LINE_START_DATE', 'LINE_EXPIRY_DATE', 'CHECKER_DT_STAMP'
+    'LIAB_ID_post', 'CUST_NO_post', 'CUST_AC_NO', 'LINE_ID_d1', 'LINE_ID_post', 'KEY1', 'KEY2', 'ACY_AVL_BAL_post'
 ]
 
 result_df = filtered_df[selected_columns]
+
+# Rename the columns to match the SQL output
+result_df.columns = [
+    'LIAB_ID', 'CUST_NO', 'CUST_AC_NO', 'D-1', 'TODAY', 'KEY1', 'KEY2', 'ACY_AVL_BAL'
+]
 
 # Display the resulting DataFrame
 print(result_df)
