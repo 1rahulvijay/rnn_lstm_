@@ -1,31 +1,46 @@
 import pandas as pd
-from datetime import datetime
 
-# Assuming data is already loaded into a DataFrame
-# HU_tbl_LIMITS = pd.read_csv('HU_tbl_LIMITS.csv')
+def apply_function_to_columns(df, func, *cols):
+    """
+    Apply a function to specified columns of a DataFrame.
 
-# Filter conditions based on the SQL query
-filtered_df = HU_tbl_LIMITS[
-    (HU_tbl_LIMITS['RECORD_STAT'] == "0") &
-    (HU_tbl_LIMITS['CHECKER_DT_STAMP'] < (datetime.now() - pd.Timedelta(days=12*30*24*60))) &  # Simulating the given date
-    ((HU_tbl_LIMITS['MANUAL_LINE'] == "N") | (HU_tbl_LIMITS['MANUAL_LINE'].isnull()))
-]
+    Parameters:
+    df (pd.DataFrame): The DataFrame to apply the function to.
+    func (callable): The function to apply. It should accept arguments equal to the number of columns specified.
+    *cols (str): Column names to apply the function to.
 
-# Select the required columns
-selected_df = filtered_df[[
-    'LIAB_ID',
-    'LINE_CD',
-    'LINE_SERIAL',
-    'MAIN_LINE',
-    'AVAILABILITY_FLAG',
-    'LIMIT_AMOUNT',
-    'RECORD_STAT',
-    'CHECKER_DT_STAMP',
-    'MAKER_ID',
-    'MANUAL_LINE'
-]]
+    Returns:
+    pd.Series: The result of applying the function to the specified columns.
+    """
+    if len(cols) < 2 or len(cols) > 3:
+        raise ValueError("This function only supports applying to 2 or 3 columns.")
 
-# Sort the DataFrame by 'LIAB_ID'
-result_df = selected_df.sort_values(by='LIAB_ID')
+    if len(cols) == 2:
+        col1, col2 = cols
+        return df.apply(lambda row: func(row[col1], row[col2]), axis=1)
+    
+    if len(cols) == 3:
+        col1, col2, col3 = cols
+        return df.apply(lambda row: func(row[col1], row[col2], row[col3]), axis=1)
 
-print(result_df)
+# Example usage:
+df = pd.DataFrame({
+    'A': [1, 2, 3],
+    'B': [4, 5, 6],
+    'C': [7, 8, 9]
+})
+
+# Define a function to apply
+def example_func_2cols(x, y):
+    return x + y
+
+def example_func_3cols(x, y, z):
+    return x * y * z
+
+# Apply the function to 2 columns
+result_2cols = apply_function_to_columns(df, example_func_2cols, 'A', 'B')
+print(result_2cols)
+
+# Apply the function to 3 columns
+result_3cols = apply_function_to_columns(df, example_func_3cols, 'A', 'B', 'C')
+print(result_3cols)
