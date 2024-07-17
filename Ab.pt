@@ -1,9 +1,18 @@
 import pandas as pd
+import re
 
 class DataFrameValidator:
-    def __init__(self):
-        self.data = None
+    def __init__(self, data=None, column_type_checks=None, not_null_checks=None, unique_checks=None,
+                 data_range_checks=None, format_checks=None, relationship_checks=None, categorical_checks=None):
+        self.data = data
         self.errors = []
+        self.column_type_checks = column_type_checks or {}
+        self.not_null_checks = not_null_checks or []
+        self.unique_checks = unique_checks or []
+        self.data_range_checks = data_range_checks or {}
+        self.format_checks = format_checks or {}
+        self.relationship_checks = relationship_checks or []
+        self.categorical_checks = categorical_checks or {}
 
     def load_data(self, data):
         if not isinstance(data, pd.DataFrame):
@@ -20,16 +29,57 @@ class DataFrameValidator:
             self.errors.append(f"Column '{column_name}' type is {actual_type}, expected {expected_type}")
 
     def check_column_not_null(self, column_name):
-        if self.data[column_name].isnull().any():
-            self.errors.append(f"Column '{column_name}' contains null values")
+        null_count = self.data[column_name].isnull().sum()
+        if null_count > 0:
+            self.errors.append(f"Column '{column_name}' contains {null_count} null values")
+
+    def check_unique_values(self, column_name):
+        if self.data[column_name].nunique() != len(self.data):
+            self.errors.append(f"Column '{column_name}' has duplicate values")
+
+    def check_data_range(self, column_name, min_value, max_value):
+        if not self.data[column_name].between(min_value, max_value).all():
+            self.errors.append(f"Values in column '{column_name}' are not within range [{min_value}, {max_value}]")
+
+    def check_column_format(self, column_name, regex_pattern):
+        regex = re.compile(regex_pattern)
+        invalid_values = self.data[column_name].apply(lambda x: not regex.match(str(x)))
+        if invalid_values.any():
+            self.errors.append(f"Invalid format in column '{column_name}'")
+
+    def check_relationship(self, column1, column2):
+        if not (self.data[column1] > self.data[column2]).all():
+            self.errors.append(f"Values in '{column1}' must be greater than '{column2}'")
+
+    def check_categorical_values(self, column_name, valid_categories):
+        invalid_values = self.data[~self.data[column_name].isin(valid_categories)]
+        if not invalid_values.empty:
+            self.errors.append(f"Invalid categorical values in column '{column_name}'")
 
     def validate(self):
         self.errors = []  # Clear previous errors
-        # Add specific validation checks here
-        # Example:
-        self.check_column_exists('Name')
-        self.check_column_type('Age', int)
-        self.check_column_not_null('City')
+
+        # Perform checks based on provided parameters
+        for column_name, expected_type in self.column_type_checks.items():
+            self.check_column_type(column_name, expected_type)
+
+        for column_name in self.not_null_checks:
+            self.check_column_not_null(column_name)
+
+        for column_name in self.unique_checks:
+            self.check_unique_values(column_name)
+
+        for column_name, (min_value, max_value) in self.data_range_checks.items():
+            self.check_data_range(column_name, min_value, max_value)
+
+        for column_name, regex_pattern in self.format_checks.items():
+            self.check_column_format(column_name, regex_pattern)
+
+        for column1, column2 in self.relationship_checks:
+            self.check_relationship(column1, column2)
+
+        for column_name, valid_categories in self.categorical_checks.items():
+            self.check_categorical_values(column_name, valid_categories)
 
         if self.errors:
             raise ValidationException(self.errors)
@@ -46,15 +96,51 @@ class ValidationException(Exception):
 # Example usage:
 # Assuming df is your pandas DataFrame
 df = pd.DataFrame({
-    'Name': ['Alice', 'Bob', 'Charlie'],
-    'Age': [25, 30, 35],
-    'City': ['New York', None, 'Los Angeles']
+    'ID': [1, 2, 3, 4, 5],
+    'Name': ['Alice', 'Bob', 'Charlie', 'David', 'Eva'],
+    'Age': [25, 30, 35, 40, 28],
+    'City': ['New York', 'Chicago', 'Los Angeles', 'San Francisco', 'Seattle'],
+    'Salary': [50000, 75000, 90000, 110000, 60000],
+    'Email': ['alice@example.com', 'bob@gmail.com', 'charlie@company', 'david@hotmail.com', 'eva@xyz.com'],
+    'Start_Date': pd.to_datetime(['2023-01-01', '2022-05-15', '2023-02-28', '2022-12-01', '2023-03-15']),
+    'End_Date': pd.to_datetime(['2024-01-01', '2023-05-15', '2024-02-28', '2023-12-01', '2024-03-15']),
+    'Category': ['A', 'B', 'C', 'D', 'B']
 })
 
-validator = DataFrameValidator()
+# Define validation parameters
+column_type_checks = {
+    'Age': int,
+}
 
-# Load data into the validator
-validator.load_data(df)
+not_null_checks = ['City', 'Name']
+
+unique_checks = ['ID']
+
+data_range_checks = {
+    'Salary': (0, 100000),
+}
+
+format_checks = {
+    'Email': r'^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$',
+}
+
+relationship_checks = [
+    ('Start_Date', 'End_Date'),
+]
+
+categorical_checks = {
+    'Category': ['A', 'B', 'C'],
+}
+
+# Create validator with parameters
+validator = DataFrameValidator(data=df,
+                               column_type_checks=column_type_checks,
+                               not_null_checks=not_null_checks,
+                               unique_checks=unique_checks,
+                               data_range_checks=data_range_checks,
+                               format_checks=format_checks,
+                               relationship_checks=relationship_checks,
+                               categorical_checks=categorical_checks)
 
 # Validate the DataFrame
 try:
