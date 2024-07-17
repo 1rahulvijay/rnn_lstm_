@@ -3,14 +3,16 @@ from airflow.operators.dummy import DummyOperator
 from airflow.operators.bash import BashOperator
 from airflow.operators.python import PythonOperator
 from airflow.operators.papermill import PapermillOperator
+from airflow.utils import timezone
 from datetime import datetime, timedelta
 
 class MyDAG:
-    def __init__(self, dag_id, schedule, default_args, operator_params=None):
+    def __init__(self, dag_id, schedule, default_args, operator_params=None, tz='UTC'):
         self.dag_id = dag_id
         self.schedule = schedule
         self.default_args = default_args
         self.operator_params = operator_params or {}
+        self.timezone = timezone(tz)
         self.dag = self.create_dag()
 
     def create_dag(self):
@@ -18,7 +20,8 @@ class MyDAG:
             dag_id=self.dag_id,
             default_args=self.default_args,
             schedule_interval=self.schedule,
-            catchup=False
+            catchup=False,
+            timezone=self.timezone
         ) as dag:
             start = DummyOperator(task_id='start')
             end = DummyOperator(task_id='end')
@@ -81,8 +84,9 @@ operator_params = {
     }
 }
 
-# Instantiate the class
-dag = MyDAG(dag_id='my_custom_dag', schedule='@daily', default_args=default_args, operator_params=operator_params)
+# Instantiate the class with time zone
+dag = MyDAG(dag_id='my_custom_dag', schedule='@daily', default_args=default_args, operator_params=operator_params, tz='Europe/London')
 
 # Access the created DAG
 dag_instance = dag.dag
+                    
