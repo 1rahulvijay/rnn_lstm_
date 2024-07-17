@@ -1,16 +1,64 @@
-# Convert specific columns to numeric type
-numeric_columns = ['LIMIT_AMOUNT_NEW', 'LIMIT_AMOUNT_OLD', 'DAYLIGHT_OD_LIMIT_NEW', 'DAYLIGHT_OD_LIMIT_OLD']
-merged_df[numeric_columns] = merged_df[numeric_columns].apply(pd.to_numeric, errors='coerce')
+import pandas as pd
 
-# Now apply your change_conditions with corrected numeric columns
-change_conditions = (
-    (merged_df["RECORD_STAT_NEW"] == "0") &
-    (merged_df["KEY_REC"].notna()) &
-    ((merged_df["LIMIT_AMOUNT_NEW"] - merged_df["LIMIT_AMOUNT_OLD"]).fillna(0) != 0) &
-    ((merged_df["DAYLIGHT_OD_LIMIT_NEW"] - merged_df["DAYLIGHT_OD_LIMIT_OLD"]).fillna(0) != 0) &
-    (merged_df["AVAILABILITY_FLAG_NEW"] != merged_df["AVAILABILITY_FLAG_OLD"]) &
-    (merged_df["LINE_CURRENCY_NEW"] != merged_df["LINE_CURRENCY_OLD"])
-)
+class DataFrameValidator:
+    def __init__(self):
+        self.data = None
+        self.errors = []
 
-# Filter based on change_conditions
-changed_lines = merged_df[change_conditions]
+    def load_data(self, data):
+        if not isinstance(data, pd.DataFrame):
+            raise TypeError("Expected a pandas DataFrame object")
+        self.data = data
+
+    def check_column_exists(self, column_name):
+        if column_name not in self.data.columns:
+            self.errors.append(f"Column '{column_name}' does not exist")
+
+    def check_column_type(self, column_name, expected_type):
+        actual_type = self.data[column_name].dtype
+        if not pd.api.types.is_dtype_equal(actual_type, expected_type):
+            self.errors.append(f"Column '{column_name}' type is {actual_type}, expected {expected_type}")
+
+    def check_column_not_null(self, column_name):
+        if self.data[column_name].isnull().any():
+            self.errors.append(f"Column '{column_name}' contains null values")
+
+    def validate(self):
+        self.errors = []  # Clear previous errors
+        # Add specific validation checks here
+        # Example:
+        self.check_column_exists('Name')
+        self.check_column_type('Age', int)
+        self.check_column_not_null('City')
+
+        if self.errors:
+            raise ValidationException(self.errors)
+
+# Custom exception for validation errors
+class ValidationException(Exception):
+    def __init__(self, errors):
+        self.errors = errors
+
+    def __str__(self):
+        return f"DataFrame validation errors: {', '.join(self.errors)}"
+
+
+# Example usage:
+# Assuming df is your pandas DataFrame
+df = pd.DataFrame({
+    'Name': ['Alice', 'Bob', 'Charlie'],
+    'Age': [25, 30, 35],
+    'City': ['New York', None, 'Los Angeles']
+})
+
+validator = DataFrameValidator()
+
+# Load data into the validator
+validator.load_data(df)
+
+# Validate the DataFrame
+try:
+    validator.validate()
+    print("DataFrame is valid!")
+except ValidationException as ve:
+    print(f"Validation failed: {ve}")
