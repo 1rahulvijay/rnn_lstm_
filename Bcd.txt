@@ -1,60 +1,88 @@
-import pandas as pd
+from airflow import DAG
+from airflow.operators.dummy import DummyOperator
+from airflow.operators.bash import BashOperator
+from airflow.operators.python import PythonOperator
+from airflow.operators.papermill import PapermillOperator
+from datetime import datetime, timedelta
 
-# Assuming data is already loaded into DataFrames
-# HU_Daily_6_AccountWithChangedLineID = pd.read_csv('HU_Daily_6_AccountWithChangedLineID.csv')
-# HU_tb1_LIMITS = pd.read_csv('HU_tb1_LIMITS.csv')
-# HU_tb1_LIMITS_D_1 = pd.read_csv('HU_tb1_LIMITS_D_1.csv')
+class MyDAG:
+    def __init__(self, dag_id, schedule, default_args, operator_params=None):
+        self.dag_id = dag_id
+        self.schedule = schedule
+        self.default_args = default_args
+        self.operator_params = operator_params or {}
+        self.dag = self.create_dag()
 
-# Inner join on 'LIAB_ID' and 'KEY2'
-merged_df_1 = pd.merge(
-    HU_Daily_6_AccountWithChangedLineID,
-    HU_tb1_LIMITS,
-    how='inner',
-    left_on=['LIAB_ID', 'KEY2'],
-    right_on=['LIAB_ID', 'KEY']
-)
+    def create_dag(self):
+        with DAG(
+            dag_id=self.dag_id,
+            default_args=self.default_args,
+            schedule_interval=self.schedule,
+            catchup=False
+        ) as dag:
+            start = DummyOperator(task_id='start')
+            end = DummyOperator(task_id='end')
+            
+            if 'bash' in self.operator_params:
+                bash_params = self.operator_params['bash']
+                run_bash = BashOperator(
+                    task_id='run_bash_script',
+                    bash_command=bash_params.get('bash_command', 'echo "Hello from bash script"'),
+                )
+                start >> run_bash >> end
 
-# Left join with 'HU_tb1_LIMITS_D_1' on 'LIAB_ID' and 'KEY1'
-merged_df_2 = pd.merge(
-    merged_df_1,
-    HU_tb1_LIMITS_D_1,
-    how='left',
-    left_on=['LIAB_ID', 'KEY1'],
-    right_on=['LIAB_ID', 'KEY']
-)
+            if 'python' in self.operator_params:
+                python_params = self.operator_params['python']
+                run_python = PythonOperator(
+                    task_id='run_python_script',
+                    python_callable=python_params.get('python_callable', self.print_hello),
+                )
+                start >> run_python >> end
 
-# Select and rename columns as required
-result_df = merged_df_2[[
-    'LIAB_ID',
-    'CUST_NO',
-    'CUST_AC_NO',
-    'ACY_AVL_BAL',
-    'D-1',
-    'TODAY',
-    'LIMIT_AMOUNT_y',  # New limit
-    'LINE_CURRENCY_y',  # CCY_NEW
-    'LIMIT_AMOUNT_x',  # Old limit
-    'LINE_CURRENCY_x',  # CCY_OLD
-    'DAYLIGHT_OD_LIMIT_x',  # OLD DOL
-    'DAYLIGHT_OD_LIMIT_y',  # NEW DOL
-    'AVAILABILITY_FLAG_x',  # OLD AVAIL
-    'AVAILABILITY_FLAG_y'  # NEW AVAIL
-]]
+            if 'papermill' in self.operator_params:
+                papermill_params = self.operator_params['papermill']
+                run_papermill = PapermillOperator(
+                    task_id='run_papermill_notebook',
+                    input_nb=papermill_params.get('input_nb', '/path/to/input_notebook.ipynb'),
+                    output_nb=papermill_params.get('output_nb', '/path/to/output_notebook.ipynb'),
+                    parameters=papermill_params.get('parameters', {})
+                )
+                start >> run_papermill >> end
 
-# Calculate the additional required columns
-result_df['DIFF_LMT'] = result_df['LIMIT_AMOUNT_y'] - result_df['LIMIT_AMOUNT_x']
-result_df['DIFF_DOL'] = result_df['DAYLIGHT_OD_LIMIT_y'] - result_df['DAYLIGHT_OD_LIMIT_x']
+        return dag
 
-# Renaming the columns to match the SQL query output
-result_df.rename(columns={
-    'LIMIT_AMOUNT_x': 'OLD_LIMIT',
-    'LINE_CURRENCY_x': 'CCY_OLD',
-    'LIMIT_AMOUNT_y': 'NEW_LIMIT',
-    'LINE_CURRENCY_y': 'CCY_NEW',
-    'DAYLIGHT_OD_LIMIT_x': 'OLD_DOL',
-    'DAYLIGHT_OD_LIMIT_y': 'NEW_DOL',
-    'AVAILABILITY_FLAG_x': 'OLD_AVAIL',
-    'AVAILABILITY_FLAG_y': 'NEW_AVAIL'
-}, inplace=True)
+    @staticmethod
+    def print_hello():
+        print("Hello, world!")
 
-print(result_df)
+# Example usage
+default_args = {
+    'owner': 'airflow',
+    'depends_on_past': False,
+    'start_date': datetime(2023, 1, 1),
+    'email_on_failure': False,
+    'email_on_retry': False,
+    'retries': 1,
+    'retry_delay': timedelta(minutes=5),
+}
+
+# Define operator parameters
+operator_params = {
+    'bash': {
+        'bash_command': 'echo "Custom Bash command"',
+    },
+    'python': {
+        'python_callable': MyDAG.print_hello,
+    },
+    'papermill': {
+        'input_nb': '/path/to/input_notebook.ipynb',
+        'output_nb': '/path/to/output_notebook.ipynb',
+        'parameters': {'parameter_name': 'parameter_value'}
+    }
+}
+
+# Instantiate the class
+dag = MyDAG(dag_id='my_custom_dag', schedule='@daily', default_args=default_args, operator_params=operator_params)
+
+# Access the created DAG
+dag_instance = dag.dag
