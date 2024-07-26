@@ -1,7 +1,7 @@
 import pandas as pd
 import pyarrow as pa
 
-# Step 1: Create a Pandas DataFrame
+# Step 1: Create a Pandas DataFrame and convert to PyArrow Table
 data = {
     'column1': ['value1', 'value2', 'value3'],
     'column2': ['value4', 'value5', 'value6'],
@@ -9,22 +9,22 @@ data = {
 }
 
 df = pd.DataFrame(data)
-
-# Step 2: Convert Pandas DataFrame to PyArrow Table
 table = pa.Table.from_pandas(df)
 
-# Step 3: Generate the SQL INSERT query directly from PyArrow Table
+# Step 2: Generate the SQL INSERT query directly from PyArrow Table
 def generate_insert_query_from_pyarrow_table(table, table_name):
+    # Convert PyArrow Table to Pandas DataFrame
+    df = table.to_pandas()
+    
     # Extract column names
-    columns = table.column_names
+    columns = df.columns
     
     # Generate column part of the query
     columns_str = ', '.join(columns)
     
     # Generate values part of the query
     values_list = []
-    for i in range(table.num_rows):
-        row = tuple(table.column(col).as_py(i) for col in columns)
+    for row in df.itertuples(index=False, name=None):
         values_list.append(str(row))
     
     values_str = ', '.join(values_list)
