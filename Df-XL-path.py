@@ -2,9 +2,10 @@ import os
 import pandas as pd
 
 class DataFrameHandler:
-    def __init__(self, input_data, sheet_name=None, file_extensions=None):
+    def __init__(self, input_data, sheet_name=None, header=0, file_extensions=None):
         self.raw_input = input_data
         self.sheet_name = sheet_name
+        self.header = header
         self.file_extensions = file_extensions if file_extensions else ['.csv']
         self.df = self._initialize_data(input_data)
 
@@ -23,9 +24,9 @@ class DataFrameHandler:
 
     def _read_file(self, file_path):
         if file_path.endswith('.csv'):
-            return pd.read_csv(file_path)
+            return pd.read_csv(file_path, header=self.header)
         elif file_path.endswith('.xlsx') or file_path.endswith('.xls'):
-            return pd.read_excel(file_path, sheet_name=self.sheet_name)
+            return pd.read_excel(file_path, sheet_name=self.sheet_name, header=self.header)
         else:
             raise ValueError("Unsupported file format. Only CSV and Excel files are supported.")
 
@@ -74,15 +75,15 @@ if __name__ == "__main__":
     print("Processed DataFrame:")
     print(handler.get_data().head())
 
-    # Initializing with an Excel file path and specifying sheet name
-    handler = DataFrameHandler('path/to/your/file.xlsx', sheet_name='Sheet1')
+    # Initializing with an Excel file path and specifying sheet name and header
+    handler = DataFrameHandler('path/to/your/file.xlsx', sheet_name='Sheet1', header=0)
     print("Raw Input Path:")
     print(handler.get_raw_input())
     print("Processed DataFrame:")
     print(handler.get_data().head())
 
-    # Initializing with a directory path and specifying file extensions
-    handler = DataFrameHandler('path/to/your/directory', file_extensions=['.csv', '.xlsx'])
+    # Initializing with a directory path, specifying file extensions, sheet name, and header
+    handler = DataFrameHandler('path/to/your/directory', file_extensions=['.csv', '.xlsx'], sheet_name='Sheet1', header=0)
     print("Raw Input Directory Path:")
     print(handler.get_raw_input())
     print("Processed DataFrame:")
