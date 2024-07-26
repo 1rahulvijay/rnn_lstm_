@@ -60,7 +60,8 @@ class DataFrameHandler:
             if os.path.isfile(file_path) and any(file_path.endswith(ext) for ext in self.file_extensions):
                 df = self._read_file(file_path)
                 self._add_additional_columns(df, file_name)
-                all_dfs.append(df)
+                if isinstance(df, pd.DataFrame):
+                    all_dfs.append(df)
         if not all_dfs:
             raise ValueError("No valid files found in the directory.")
         return pd.concat(all_dfs, ignore_index=True) if self.concat_dataframes else all_dfs
@@ -102,34 +103,13 @@ class DataFrameHandler:
 
 # Example usage
 if __name__ == "__main__":
-    # Assuming FlexReconMapping.limits_columns is a predefined list of columns
+    # Example column names, replace with actual column names
     FlexReconMapping = {
-        'limits_columns': ["col1", "col2"]  # replace with actual column names
+        'limits_columns': ["col1", "col2"]
     }
 
     file_specific_params = {
         "BG_LIMITS.xls": {"dtype": str, "usecols": FlexReconMapping['limits_columns']},
         "CZ_LIMITS.xls": {"dtype": str, "usecols": FlexReconMapping['limits_columns']},
         "HU_LIMITS.xls": {"dtype": str, "usecols": FlexReconMapping['limits_columns']},
-        "RO_LIMITS.xls": {"dtype": str, "usecols": FlexReconMapping['limits_columns']},
-        "SK_LIMITS.xls": {"dtype": str, "usecols": FlexReconMapping['limits_columns']}
-    }
-
-    params = {
-        "file_extensions": [".csv", ".xls"],
-        "file_specific_params": file_specific_params,
-        "concat_dataframes": True,
-        "additional_columns": {
-            "BG_LIMITS.xls": {"LOADING_DATE": date.today(), "Filename": "BG"},
-            "CZ_LIMITS.xls": {"LOADING_DATE": date.today(), "Filename": "CZ"},
-            "HU_LIMITS.xls": {"LOADING_DATE": date.today(), "Filename": "HU"},
-            "RO_LIMITS.xls": {"LOADING_DATE": date.today(), "Filename": "RO"},
-            "SK_LIMITS.xls": {"LOADING_DATE": date.today(), "Filename": "SK"}
-        }
-    }
-
-    handler = DataFrameHandler('path/to/your/directory', params=params)
-    print("Raw Input Directory Path:")
-    print(handler.get_raw_input())
-    print("Processed DataFrame:")
-    print(handler())
+        "RO_LIMITS.xls": {"dtype": str, "​⬤
