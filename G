@@ -34,6 +34,10 @@
             color: #777777;
             font-size: 12px;
         }
+        .footer img {
+            width: 100px; /* Adjust the size as needed */
+            margin-top: 10px;
+        }
     </style>
 </head>
 <body>
@@ -48,6 +52,7 @@
         </div>
         <div class="footer">
             <p>&copy; 2024 Company Name. All rights reserved.</p>
+            <img src="cid:logo" alt="Company Logo">
         </div>
     </div>
 </body>
