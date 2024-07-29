@@ -42,7 +42,10 @@
             vertical-align: middle;
         }
         .footer img {
-            width: 100px; /* Adjust the size as needed */
+            max-width: 80px;
+            width: 100%;
+            height: auto;
+            display: block;
         }
         .footer .footer-text {
             text-align: right;
@@ -63,7 +66,7 @@
             <table class="footer-table" role="presentation">
                 <tr>
                     <td align="left">
-                        <img src="cid:logo" alt="Company Logo">
+                        <img src="cid:logo" alt="Company Logo" style="max-width: 80px; width: 100%; height: auto; display: block;">
                     </td>
                     <td align="right" class="footer-text">
                         <p>&copy; 2024 Company Name. All rights reserved.</p>
