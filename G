@@ -1,0 +1,50 @@
+< body>
+‹div class="container")
+‹ div class="header">
+<! --
+‹ing src="./Image/Citi_Blue-RedArc_RGB.png* alt-"team Logo">
+<h1>I</h1>
+‹/div>
+<div
+class="content"> class=MsoNormal>
+‹span>
+Dear all, <br>br>‹br›Please see ‹b> {treport_name}) </b> report as of ‹b›{{date})</b>• <br<brxbr›
+‹b›Action required from recipients:</b><br><br›
+117
+118
+119
+120
+121
+‹b>Purpose:</b> {purpose})<br>br›
+<b>Report details:</b› {{report_details)br*br
+‹b>Source system:</b> f[source_system}<br>br>
+<b>Requestor & Owner:</b>(frequest_and_owner})<brbr>
+122
+123
+124
+‹b›Contact person in :</b> ffgrt person}}<br><br>br>
+Kindly let us know if there should be any changes to report criteria or distribution list or report
+125
+126
+filters.
+4/span>
+127
+128
+129
+‹р>
+</div>
+‹div
+130
+131
+132
+133
+134
+135
+class=" footer">
+«ing src="https://www.citigroup.com/global*
+， alt="team Logo">
+«p›A Mission of Enabling Growth & Economic Progress
+| Transforming Citi</p>
+</div>
+</ div>
+</body>
