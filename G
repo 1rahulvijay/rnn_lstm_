@@ -1,56 +1,54 @@
-import smtplib
-from email.mime.multipart import MIMEMultipart
-from email.mime.text import MIMEText
-from email.mime.image import MIMEImage
-from email.mime.base import MIMEBase
-from email import encoders
-from jinja2 import Environment, FileSystemLoader
-
-# Email configuration
-SMTP_SERVER = 'smtp.example.com'
-SMTP_PORT = 587
-SMTP_USERNAME = 'your_email@example.com'
-SMTP_PASSWORD = 'your_password'
-FROM_EMAIL = 'your_email@example.com'
-TO_EMAIL = 'recipient_email@example.com'
-SUBJECT = 'LCR Mail Template'
-
-# Jinja2 environment setup
-env = Environment(loader=FileSystemLoader('.'))
-template = env.get_template('email_template.html')
-
-# Email content
-email_content = template.render(
-    report_name='Monthly Financial Report',
-    date='July 29, 2024',
-    purpose='To provide financial overview',
-    report_details='Details of the financial report',
-    source_system='Internal Financial System',
-    request_and_owner='John Doe',
-    contact_person='Jane Smith'
-)
-
-# Create email message
-msg = MIMEMultipart()
-msg['From'] = FROM_EMAIL
-msg['To'] = TO_EMAIL
-msg['Subject'] = SUBJECT
-
-msg.attach(MIMEText(email_content, 'html'))
-
-# Attach logo image
-with open('path_to_logo_image.png', 'rb') as img_file:
-    img = MIMEImage(img_file.read())
-    img.add_header('Content-ID', '<logo_image>')
-    img.add_header('Content-Disposition', 'inline', filename='logo_image.png')
-    msg.attach(img)
-
-# Send email
-try:
-    with smtplib.SMTP(SMTP_SERVER, SMTP_PORT) as server:
-        server.starttls()
-        server.login(SMTP_USERNAME, SMTP_PASSWORD)
-        server.sendmail(FROM_EMAIL, TO_EMAIL, msg.as_string())
-    print('Email sent successfully')
-except Exception as e:
-    print(f'Failed to send email: {e}')
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Email Template</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f6f6f6;
+        }
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            background-color: #ffffff;
+            padding: 20px;
+            border: 1px solid #dddddd;
+        }
+        .header {
+            background-color: #4CAF50;
+            color: white;
+            padding: 10px 0;
+            text-align: center;
+        }
+        .content {
+            margin: 20px 0;
+        }
+        .footer {
+            background-color: #f1f1f1;
+            text-align: center;
+            padding: 10px 0;
+            color: #777777;
+            font-size: 12px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Welcome to Our Service</h1>
+        </div>
+        <div class="content">
+            <p>Hello,</p>
+            <p>Thank you for signing up for our service. We're excited to have you on board!</p>
+            <p>Best regards,<br>Team</p>
+        </div>
+        <div class="footer">
+            <p>&copy; 2024 Company Name. All rights reserved.</p>
+        </div>
+    </div>
+</body>
+</html>
