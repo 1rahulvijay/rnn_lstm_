@@ -1,59 +1,100 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Email Template</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            margin: 0;
-            padding: 0;
-            background-color: #f6f6f6;
-        }
-        .container {
-            max-width: 600px;
-            margin: 0 auto;
-            background-color: #ffffff;
-            padding: 20px;
-            border: 1px solid #dddddd;
-        }
-        .header {
-            background-color: #4CAF50;
-            color: white;
-            padding: 10px 0;
-            text-align: center;
-        }
-        .content {
-            margin: 20px 0;
-        }
-        .footer {
-            background-color: #f1f1f1;
-            text-align: center;
-            padding: 10px 0;
-            color: #777777;
-            font-size: 12px;
-        }
-        .footer img {
-            width: 100px; /* Adjust the size as needed */
-            margin-top: 10px;
-        }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Email Template</title>
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      width: 100%;
+      -webkit-text-size-adjust: 100%;
+      -ms-text-size-adjust: 100%;
+    }
+    table {
+      border-spacing: 0;
+      border-collapse: collapse;
+    }
+    img {
+      border: 0;
+      -ms-interpolation-mode: bicubic;
+    }
+    .wrapper {
+      width: 100%;
+      table-layout: fixed;
+      background-color: #f4f4f4;
+      padding-bottom: 40px;
+    }
+    .main {
+      background-color: #ffffff;
+      margin: 0 auto;
+      width: 100%;
+      max-width: 600px;
+      border: 1px solid #dddddd;
+    }
+    .header, .footer {
+      width: 100%;
+      padding: 20px;
+      background-color: #f4f4f4;
+      text-align: center;
+    }
+    .content {
+      padding: 20px;
+      font-family: Arial, sans-serif;
+      font-size: 16px;
+      line-height: 24px;
+      color: #333333;
+    }
+    .footer-table {
+      width: 100%;
+      font-family: Arial, sans-serif;
+      font-size: 14px;
+      line-height: 20px;
+      color: #666666;
+    }
+    .footer-table td {
+      padding: 10px;
+    }
+  </style>
 </head>
 <body>
-    <div class="container">
-        <div class="header">
-            <h1>Welcome to Our Service</h1>
-        </div>
-        <div class="content">
-            <p>Hello,</p>
-            <p>Thank you for signing up for our service. We're excited to have you on board!</p>
-            <p>Best regards,<br>Team</p>
-        </div>
-        <div class="footer">
-            <p>&copy; 2024 Company Name. All rights reserved.</p>
-            <img src="cid:logo" alt="Company Logo">
-        </div>
-    </div>
+  <table class="wrapper" role="presentation">
+    <tr>
+      <td>
+        <table class="main" role="presentation">
+          <!-- Header -->
+          <tr>
+            <td class="header">
+              <h1>Header Content</h1>
+            </td>
+          </tr>
+          <!-- Content -->
+          <tr>
+            <td class="content">
+              <p>Hello,</p>
+              <p>This is the main content of the email.</p>
+              <p>Regards,<br>Your Company</p>
+            </td>
+          </tr>
+          <!-- Footer -->
+          <tr>
+            <td class="footer">
+              <table class="footer-table" role="presentation">
+                <tr>
+                  <td align="left" width="50%">
+                    <img src="https://via.placeholder.com/100x50" alt="Logo" width="100" height="50">
+                  </td>
+                  <td align="right" width="50%">
+                    <p>Footer Text</p>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
 </body>
 </html>
