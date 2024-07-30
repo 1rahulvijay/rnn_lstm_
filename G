@@ -29,7 +29,7 @@
         .header {
             background-color: #4CAF50;
             color: white;
-            padding: 10px;
+            padding: 20px 10px;
             text-align: center;
         }
         .content {
@@ -37,7 +37,7 @@
         }
         .footer {
             background-color: #f1f1f1;
-            padding: 10px;
+            padding: 20px 10px;
             color: #777777;
             font-size: 12px;
         }
@@ -46,7 +46,7 @@
             table-layout: fixed;
         }
         .footer-table td {
-            padding: 5px;
+            padding: 10px 5px;
             vertical-align: middle;
         }
         .footer img {
