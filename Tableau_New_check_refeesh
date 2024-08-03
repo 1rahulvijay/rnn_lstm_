@@ -19,18 +19,15 @@ with server.auth.sign_in(tableau_auth):
         datasource = server.datasources.get_by_id(datasource_id)
         
         if datasource:
-            # Get all schedules
-            all_schedules, pagination_item = server.schedules.get()
-            
-            # Find refresh tasks related to the specific data source
-            datasource_refresh_tasks = []
-            for schedule in all_schedules:
-                if schedule.target.id == datasource_id and schedule.target.type == 'DataSource':
-                    datasource_refresh_tasks.append(schedule)
+            # Get all extract refresh tasks
+            all_tasks, pagination_item = server.tasks.get()
 
-            if datasource_refresh_tasks:
+            # Filter tasks to find those related to the specific data source
+            extract_refresh_tasks = [task for task in all_tasks if isinstance(task, TSC.TaskItem) and task.target.id == datasource_id and task.task_type == 'RefreshExtract']
+
+            if extract_refresh_tasks:
                 # Get the latest extract refresh task
-                latest_task = max(datasource_refresh_tasks, key=lambda task: task.updated_at)
+                latest_task = max(extract_refresh_tasks, key=lambda task: task.updated_at)
                 print(f"Latest refresh date for datasource '{datasource.name}': {latest_task.updated_at}")
             else:
                 print(f"No extract refresh tasks found for datasource '{datasource_id}'")
