@@ -2,6 +2,7 @@ import win32com.client as win32
 import pandas as pd
 import tableauserverclient as TSC
 import io
+import tempfile
 
 class ReportingAutomation:
     def __init__(self, email_dict, tableau_auth, server_url):
@@ -17,11 +18,10 @@ class ReportingAutomation:
                 subject = f"Data for {country}"
                 body = f"Please find attached the data for {country}."
 
-                # Save country_data to an Excel file in memory
-                excel_buffer = io.BytesIO()
-                with pd.ExcelWriter(excel_buffer, engine='xlsxwriter') as writer:
-                    country_data.to_excel(writer, index=False, sheet_name=country)
-                excel_buffer.seek(0)
+                # Save country_data to a temporary Excel file
+                with tempfile.NamedTemporaryFile(delete=False, suffix='.xlsx') as tmp:
+                    country_data.to_excel(tmp.name, index=False, sheet_name=country)
+                    tmp_path = tmp.name
 
                 # Create email
                 outlook = win32.Dispatch("outlook.application")
@@ -30,14 +30,16 @@ class ReportingAutomation:
                 mail.Subject = subject
                 mail.Body = body
 
-                # Attach the in-memory Excel file
-                attachment = win32.Dispatch("MSXML2.DOMDocument").createElement("Attachment")
-                attachment.Data = excel_buffer.getvalue()
-                attachment.Filename = f"{country}_data.xlsx"
-                mail.Attachments.Add(attachment)
-
-                mail.Display()
+                # Attach the Excel file
+                mail.Attachments.Add(tmp_path)
+                
+                mail.Send()
                 print(f"Email sent to {email}")
+
+                # Remove the temporary file
+                tmp.close()
+                os.remove(tmp_path)
+
             else:
                 print(f"No data found for {country}")
 
