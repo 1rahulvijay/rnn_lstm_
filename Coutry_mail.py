@@ -30,10 +30,10 @@ class ReportingAutomation:
                 mail.Subject = subject
                 mail.Body = body
 
-                # Attach the Excel file
-                attachment = win32.Dispatch("Scripting.FileSystemObject").GetTempName() + '.xlsx'
-                with open(attachment, 'wb') as f:
-                    f.write(excel_buffer.read())
+                # Attach the in-memory Excel file
+                attachment = win32.Dispatch("MSXML2.DOMDocument").createElement("Attachment")
+                attachment.Data = excel_buffer.getvalue()
+                attachment.Filename = f"{country}_data.xlsx"
                 mail.Attachments.Add(attachment)
 
                 mail.Display()
