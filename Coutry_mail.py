@@ -1,76 +1,140 @@
-import win32com.client as win32
+import os
+import json
+import logging
+from typing import List, Dict, Optional, Union
+from pydantic import BaseSettings
+from jinja2 import Environment, FileSystemLoader
+from email.mime.multipart import MIMEMultipart
+from email.mime.text import MIMEText
+from email.mime.base import MIMEBase
+from email import encoders
+import smtplib
 import pandas as pd
-import tableauserverclient as TSC
-import io
-import tempfile
 
-class ReportingAutomation:
-    def __init__(self, email_dict, tableau_auth, server_url):
-        self.email_dict = email_dict
-        self.tableau_auth = tableau_auth
-        self.server = TSC.Server(server_url, use_server_version=True)
+# Configuration settings using pydantic
+class Settings(BaseSettings):
+    smtp_server: str
+    smtp_port: int
+    smtp_user: str
+    smtp_password: str
+    default_subject: str
+    attachments_dir: str
+    templates_dir: str
+    log_file: str
 
-    def send_email(self, df):
-        for country, email in self.email_dict.items():
-            country_data = df[df["Country Name"] == country]
+    class Config:
+        env_file = '.env'
 
-            if not country_data.empty:
-                subject = f"Data for {country}"
-                body = f"Please find attached the data for {country}."
+settings = Settings()
 
-                # Save country_data to a temporary Excel file
-                with tempfile.NamedTemporaryFile(delete=False, suffix='.xlsx') as tmp:
-                    country_data.to_excel(tmp.name, index=False, sheet_name=country)
-                    tmp_path = tmp.name
+# Configure logging
+logging.basicConfig(filename=settings.log_file, level=logging.INFO,
+                    format='%(asctime)s - %(levelname)s - %(message)s')
 
-                # Create email
-                outlook = win32.Dispatch("outlook.application")
-                mail = outlook.CreateItem(0)
-                mail.To = email
-                mail.Subject = subject
-                mail.Body = body
+class EmailSender:
+    def __init__(self):
+        # Set up Jinja2 environment
+        self.env = Environment(loader=FileSystemLoader(settings.templates_dir))
 
-                # Attach the Excel file
-                mail.Attachments.Add(tmp_path)
-                
-                mail.Send()
-                print(f"Email sent to {email}")
+    def load_template(self, template_name: str, context: Dict[str, str]) -> str:
+        try:
+            template = self.env.get_template(template_name)
+            return template.render(context)
+        except Exception as e:
+            logging.error(f"Error loading template {template_name}: {e}")
+            raise
 
-                # Remove the temporary file
-                tmp.close()
-                os.remove(tmp_path)
+    def send_email(self, to_email: str, subject: str, body: str, attachments: List[Union[str, Dict[str, pd.DataFrame]]] = []):
+        msg = MIMEMultipart()
+        msg['From'] = settings.smtp_user
+        msg['To'] = to_email
+        msg['Subject'] = subject
 
-            else:
-                print(f"No data found for {country}")
+        msg.attach(MIMEText(body, 'html'))
 
-        return df
+        for attachment in attachments:
+            if isinstance(attachment, str):
+                file_path = attachment
+                if os.path.isfile(file_path):
+                    try:
+                        part = MIMEBase('application', 'octet-stream')
+                        with open(file_path, 'rb') as file:
+                            part.set_payload(file.read())
+                        encoders.encode_base64(part)
+                        part.add_header(
+                            'Content-Disposition',
+                            f'attachment; filename={os.path.basename(file_path)}'
+                        )
+                        msg.attach(part)
+                    except Exception as e:
+                        logging.error(f"Error attaching file {file_path}: {e}")
+                        raise
+            elif isinstance(attachment, dict):
+                for filename, df in attachment.items():
+                    try:
+                        file_path = os.path.join(settings.attachments_dir, filename)
+                        df.to_excel(file_path, index=False)
+                        part = MIMEBase('application', 'octet-stream')
+                        with open(file_path, 'rb') as file:
+                            part.set_payload(file.read())
+                        encoders.encode_base64(part)
+                        part.add_header(
+                            'Content-Disposition',
+                            f'attachment; filename={filename}'
+                        )
+                        msg.attach(part)
+                    except Exception as e:
+                        logging.error(f"Error attaching DataFrame {filename}: {e}")
+                        raise
 
-    def retrieve_tableau_data(self, view_id):
-        with self.server.auth.sign_in(self.tableau_auth):
+        try:
+            with smtplib.SMTP(settings.smtp_server, settings.smtp_port) as server:
+                server.starttls()
+                server.login(settings.smtp_user, settings.smtp_password)
+                server.sendmail(settings.smtp_user, to_email, msg.as_string())
+                logging.info(f'Email successfully sent to {to_email}')
+        except Exception as e:
+            logging.error(f'Failed to send email to {to_email}: {e}')
+            raise
+
+    def send_bulk_emails(self, recipients: List[Dict[str, Optional[Union[str, pd.DataFrame]]]]):
+        for recipient in recipients:
+            to_email = recipient['email']
+            template_name = recipient['template']
+            attachments = []
+            for attachment in recipient.get('attachments', []):
+                if isinstance(attachment, str):
+                    attachments.append(os.path.join(settings.attachments_dir, attachment))
+                elif isinstance(attachment, dict):
+                    attachments.append(attachment)
+
+            context = recipient.get('context', {})
             try:
-                view = self.server.views.get_by_id(view_id)
-                if view is None:
-                    raise ValueError(f"No view found with ID: {view_id}")
-
-                # Use the correct method to retrieve CSV data from the view
-                self.server.views.populate_csv(view)
-                csv_data = view.csv
-                csv_data_io = io.StringIO(csv_data.decode("utf-8"))
-                df = pd.read_csv(csv_data_io)
-                return df
-
-            except TSC.ServerResponseError as e:
-                print(f"Server error: {e}")
+                body = self.load_template(template_name, context)
+                self.send_email(to_email, settings.default_subject, body, attachments)
             except Exception as e:
-                print(f"An error occurred: {e}")
+                logging.error(f"Error processing email for {to_email}: {e}")
 
-# Example usage
-if __name__ == "__main__":
-    email_dict = {'Country1': 'email1@example.com', 'Country2': 'email2@example.com'}
-    tableau_auth = TSC.PersonalAccessTokenAuth('name', 'token', 'site')
-    server_url = 'your_server_url'
+if __name__ == '__main__':
+    df = pd.DataFrame({
+        'Name': ['Alice', 'Bob'],
+        'Special Offer': ['20% off', '30% off']
+    })
+    
+    recipients = [
+        {
+            'email': 'recipient1@example.com',
+            'template': 'template1.html',
+            'attachments': ['file1.pdf', {'offer.xlsx': df}],
+            'context': {'name': 'Alice', 'special_offer': '20% off'}
+        },
+        {
+            'email': 'recipient2@example.com',
+            'template': 'template2.html',
+            'attachments': ['file2.pdf', {'offer.xlsx': df}],
+            'context': {'name': 'Bob', 'special_offer': '30% off'}
+        }
+    ]
 
-    automation = ReportingAutomation(email_dict, tableau_auth, server_url)
-    df = automation.retrieve_tableau_data('view_id')
-    if df is not None:
-        automation.send_email(df)
+    email_sender = EmailSender()
+    email_sender.send_bulk_emails(recipients)
