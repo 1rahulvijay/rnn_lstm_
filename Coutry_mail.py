@@ -15,13 +15,26 @@ class ReportingAutomation:
 
             if not country_data.empty:
                 subject = f"Data for {country}"
-                body = f"{country} data:\n\n{country_data.to_string(index=False)}"
+                body = f"Please find attached the data for {country}."
 
+                # Save country_data to an Excel file in memory
+                excel_buffer = io.BytesIO()
+                with pd.ExcelWriter(excel_buffer, engine='xlsxwriter') as writer:
+                    country_data.to_excel(writer, index=False, sheet_name=country)
+                excel_buffer.seek(0)
+
+                # Create email
                 outlook = win32.Dispatch("outlook.application")
                 mail = outlook.CreateItem(0)
                 mail.To = email
                 mail.Subject = subject
                 mail.Body = body
+
+                # Attach the Excel file
+                attachment = win32.Dispatch("Scripting.FileSystemObject").GetTempName() + '.xlsx'
+                with open(attachment, 'wb') as f:
+                    f.write(excel_buffer.read())
+                mail.Attachments.Add(attachment)
 
                 mail.Display()
                 print(f"Email sent to {email}")
@@ -37,8 +50,10 @@ class ReportingAutomation:
                 if view is None:
                     raise ValueError(f"No view found with ID: {view_id}")
 
-                csv_data = "--".join([chunk.decode("utf-8") for chunk in view.csv()])
-                csv_data_io = io.StringIO(csv_data)
+                # Use the correct method to retrieve CSV data from the view
+                self.server.views.populate_csv(view)
+                csv_data = view.csv
+                csv_data_io = io.StringIO(csv_data.decode("utf-8"))
                 df = pd.read_csv(csv_data_io)
                 return df
 
@@ -55,4 +70,5 @@ if __name__ == "__main__":
 
     automation = ReportingAutomation(email_dict, tableau_auth, server_url)
     df = automation.retrieve_tableau_data('view_id')
-    automation.send_email(df)
+    if df is not None:
+        automation.send_email(df)
