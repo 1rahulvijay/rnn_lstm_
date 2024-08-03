@@ -1,0 +1,37 @@
+import tableauserverclient as TSC
+
+# Tableau Server details
+server_url = 'https://your-tableau-server.com'
+username = 'your-username'
+password = 'your-password'
+site_id = 'your-site-id'  # use '' if you are not using any site
+
+# Data source ID
+datasource_id = 'your-datasource-id'
+
+# Sign in to Tableau Server
+tableau_auth = TSC.TableauAuth(username, password, site_id)
+server = TSC.Server(server_url, use_server_version=True)
+
+with server.auth.sign_in(tableau_auth):
+    # Get the specific data source by ID
+    datasource = server.datasources.get_by_id(datasource_id)
+    
+    if datasource is not None:
+        # Get the refresh task for the data source
+        req_option = TSC.RequestOptions()
+        req_option.filter.add(TSC.Filter(TSC.RequestOptions.Field.DatasourceId, TSC.RequestOptions.Operator.Equals, datasource.id))
+        
+        all_tasks, pagination_item = server.tasks.get(req_option)
+        
+        # Filter extract refresh tasks
+        extract_refresh_tasks = [task for task in all_tasks if task.task_type == 'RefreshExtract']
+        
+        if extract_refresh_tasks:
+            # Get the latest extract refresh task
+            latest_task = max(extract_refresh_tasks, key=lambda task: task.updated_at)
+            print(f"Latest refresh date for datasource '{datasource.name}': {latest_task.updated_at}")
+        else:
+            print(f"No extract refresh tasks found for datasource '{datasource.id}'")
+    else:
+        print(f"Datasource with ID '{datasource_id}' not found")
