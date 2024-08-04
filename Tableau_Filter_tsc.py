@@ -17,9 +17,9 @@ class TableauDataDownloader:
     def disconnect(self):
         self.server.auth.sign_out()
 
-    def download_data(self, workbook_name, dashboard_name, filters, output_file='output.csv'):
+    def download_data(self, workbook_name, view_name, filters, output_file='output.csv'):
         with self.server.auth.sign_in(self.tableau_auth):
-            # Get the workbook and the specific dashboard view
+            # Get the workbook and the specific view
             all_workbooks, pagination_item = self.server.workbooks.get()
             workbook = next((wb for wb in all_workbooks if wb.name == workbook_name), None)
 
@@ -27,19 +27,18 @@ class TableauDataDownloader:
                 raise Exception('Workbook not found')
 
             self.server.workbooks.populate_views(workbook)
-            dashboard_view = next((v for v in workbook.views if v.name == dashboard_name), None)
+            view = next((v for v in workbook.views if v.name == view_name), None)
 
-            if dashboard_view is None:
-                raise Exception('Dashboard view not found')
+            if view is None:
+                raise Exception('View not found')
 
-            # Apply filters to the dashboard view
-            req_option = TSC.PDFRequestOptions()
+            # Apply filters to the view
             for filter_name, filter_value in filters.items():
-                req_option.vf[filter_name] = filter_value
+                self.server.views.apply_filter(view, filter_name, filter_value, TSC.FilterOperator.Equals)
 
-            # Get filtered data from the data tab within the dashboard
-            self.server.views.populate_csv(dashboard_view, req_options=req_option)
-            csv_data = dashboard_view.csv
+            # Get filtered data from the view
+            csv_req_option = TSC.CSVRequestOptions()
+            csv_data = self.server.views.populate_csv(view, csv_req_option)
 
             # Save the CSV data to a file
             with open(output_file, 'w') as file:
@@ -65,4 +64,4 @@ if __name__ == "__main__":
         'Name': 'Rahul'
     }
     
-    downloader.download_data('your_workbook_name', 'your_dashboard_name', filters)
+    downloader.download_data('your_workbook_name', 'your_view_name', filters)
