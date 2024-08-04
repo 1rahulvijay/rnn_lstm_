@@ -1,6 +1,7 @@
 import tableauserverclient as TSC
 import pandas as pd
 from datetime import datetime
+import urllib.parse
 
 class TableauDataDownloader:
     def __init__(self, token_name, token_value, site_id, server_url):
@@ -32,13 +33,13 @@ class TableauDataDownloader:
             if view is None:
                 raise Exception('View not found')
 
-            # Apply filters to the view
-            for filter_name, filter_value in filters.items():
-                self.server.views.apply_filter(view, filter_name, filter_value, TSC.FilterOperator.Equals)
+            # Construct the URL with filters
+            filter_query = '&'.join([f'vf_{urllib.parse.quote(key)}={urllib.parse.quote(value)}' for key, value in filters.items()])
+            csv_url = f"{self.server.baseurl}/views/{view.id}/data?{filter_query}"
 
-            # Get filtered data from the view
-            csv_req_option = TSC.CSVRequestOptions()
-            csv_data = self.server.views.populate_csv(view, csv_req_option)
+            # Get the filtered data
+            response = self.server._make_request('GET', csv_url)
+            csv_data = response.content.decode('utf-8')
 
             # Save the CSV data to a file
             with open(output_file, 'w') as file:
