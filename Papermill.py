@@ -10,8 +10,8 @@ default_args = {
     'owner': 'airflow',
     'depends_on_past': False,
     'email_on_failure': True,
+    'email_on_retry': True,  # To send emails on retries as well
     'email': ['your_email@example.com'],  # Replace with your email
-    'email_on_retry': False,
     'retries': 1,
     'retry_delay': timedelta(minutes=5),
 }
@@ -35,21 +35,23 @@ run_notebook_task = PapermillOperator(
     dag=dag,
 )
 
-# Optional: Send an email if the task fails
+# Function to send an email if the task fails
 def send_failure_email(context):
+    # Create the email operator inside the failure callback
     email_task = EmailOperator(
         task_id='send_failure_email',
-        to='your_email@example.com',
-        subject='Airflow Task Failed: {{ task_instance.task_id }}',
+        to='your_email@example.com',  # Replace with your email
+        subject=f"Airflow Task Failed: {context['task_instance'].task_id}",
         html_content=f"""
         <h3>Task Failed</h3>
-        <p>Task: {{ task_instance.task_id }}</p>
-        <p>DAG: {{ task_instance.dag_id }}</p>
-        <p>Execution Time: {{ task_instance.execution_date }}</p>
-        <p>Log URL: <a href="{{ task_instance.log_url }}">Click Here</a></p>
+        <p><strong>Task ID:</strong> {context['task_instance'].task_id}</p>
+        <p><strong>DAG ID:</strong> {context['task_instance'].dag_id}</p>
+        <p><strong>Execution Date:</strong> {context['execution_date']}</p>
+        <p><strong>Log URL:</strong> <a href="{context['task_instance'].log_url}">View Log</a></p>
         """,
         dag=dag,
     )
+    # Execute the email task manually
     email_task.execute(context)
 
 # Attach the email failure callback to the task
