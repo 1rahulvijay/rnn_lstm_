@@ -1,45 +1,49 @@
-import tableauserverclient as TSC
-import pandas as pd
-from datetime import datetime
+# Get the list of workbooks available to the authenticated user
+all_workbooks, pagination_item = server.workbooks.get()
 
-# Define your Tableau Server credentials and connection details
-tableau_auth = TSC.PersonalAccessTokenAuth(
-    token_name='your_token_name',
-    personal_access_token='your_token_value',
-    site_id='your_site_id'  # Leave empty for default site
-)
-server = TSC.Server('https://your-tableau-server-url', use_server_version=True)
+# Optionally, filter workbooks by name
+workbook_name = "Your Workbook Name"
+workbook = next((wb for wb in all_workbooks if wb.name == workbook_name), None)
 
-# Connect to Tableau Server
-with server.auth.sign_in(tableau_auth):
-    # Get the workbook and worksheet
-    all_workbooks, pagination_item = server.workbooks.get()
-    workbook = next((wb for wb in all_workbooks if wb.name == 'your_workbook_name'), None)
-
-    if workbook is None:
-        raise Exception('Workbook not found')
-
+if workbook:
+    # Get details of the workbook
     server.workbooks.populate_views(workbook)
-    worksheet = next((view for view in workbook.views if view.name == 'your_worksheet_name'), None)
 
-    if worksheet is None:
-        raise Exception('Worksheet not found')
+    # Loop through views to find your specific dashboard view
+    dashboard_name = "Your Dashboard Name"
+    dashboard_view = next((v for v in workbook.views if v.name == dashboard_name), None)
 
-    # Apply filters to the view
-    req_option = TSC.RequestOptions()
-    req_option.vf['Cluster'] = 'NAM'  # Apply the filter for 'Cluster' with value 'NAM'
-    req_option.vf['Region'] = 'US'  # Apply the filter for 'Region' with value 'US'
-    req_option.vf['Date'] = datetime.today().strftime('%Y-%m-%d')  # Apply the filter for 'Date' with today's date
-    req_option.vf['Name'] = 'Rahul'  # Apply the filter for 'Name' with value 'Rahul'
+    if dashboard_view:
+        # Fetch the full underlying data for the view
+        req_option = TSC.RequestOptions()
 
-    # Get filtered data
-    server.views.populate_csv(worksheet, req_options=req_option)
-    csv_data = worksheet.csv
+        # Pagination to handle large data sets
+        all_rows = []
+        page_num = 0
 
-    # Save the CSV data to a file
-    with open('output.csv', 'w') as file:
-        file.write(csv_data)
+        while True:
+            req_option.page_size = 1000  # Adjust page size as necessary
+            req_option.page_number = page_num
 
-    # Optionally, load into a pandas DataFrame for further processing
-    df = pd.read_csv('output.csv')
-    print(df.head())
+            server.views.populate_csv(dashboard_view, req_options=req_option)
+            data = dashboard_view.content.splitlines()
+
+            if not data:
+                break
+
+            all_rows.extend(data)
+
+            if len(data) < req_option.page_size:
+                break
+
+            page_num += 1
+
+        # Optionally, save the full data to a file
+        with open("full_dashboard_data.csv", "w") as f:
+            f.write("\n".join(all_rows))
+
+        print("Full data extracted and saved successfully!")
+    else:
+        print(f"Dashboard '{dashboard_name}' not found in workbook '{workbook_name}'.")
+else:
+    print(f"Workbook '{workbook_name}' not found.")
