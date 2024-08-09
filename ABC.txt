@@ -1,46 +1,37 @@
-import pandas as pd
+import os
+from datetime import datetime
 
-def apply_function_to_columns(df, func, *cols):
-    """
-    Apply a function to specified columns of a DataFrame.
+def get_all_files_info(directory):
+    files_info = {}
 
-    Parameters:
-    df (pd.DataFrame): The DataFrame to apply the function to.
-    func (callable): The function to apply. It should accept arguments equal to the number of columns specified.
-    *cols (str): Column names to apply the function to.
+    for filename in os.listdir(directory):
+        filepath = os.path.join(directory, filename)
+        
+        if os.path.isfile(filepath):
+            mod_time = os.path.getmtime(filepath)
+            mod_time = datetime.fromtimestamp(mod_time)
+            files_info[filename] = mod_time
 
-    Returns:
-    pd.Series: The result of applying the function to the specified columns.
-    """
-    if len(cols) < 2 or len(cols) > 3:
-        raise ValueError("This function only supports applying to 2 or 3 columns.")
+    return files_info
 
-    if len(cols) == 2:
-        col1, col2 = cols
-        return df.apply(lambda row: func(row[col1], row[col2]), axis=1)
+def check_files_exist(directory, file_list):
+    # Get the dictionary with all files and their modification dates
+    all_files_info = get_all_files_info(directory)
     
-    if len(cols) == 3:
-        col1, col2, col3 = cols
-        return df.apply(lambda row: func(row[col1], row[col2], row[col3]), axis=1)
+    # Check if all files in the list exist in the dictionary
+    for file in file_list:
+        if file not in all_files_info:
+            print(f"Error: '{file}' does not exist in the directory.")
+            # Exit the program
+            raise FileNotFoundError(f"File '{file}' not found in directory.")
+    
+    print("All files exist.")
 
 # Example usage:
-df = pd.DataFrame({
-    'A': [1, 2, 3],
-    'B': [4, 5, 6],
-    'C': [7, 8, 9]
-})
+directory = '/path/to/your/files'
+files_to_check = ['file1.txt', 'file2.txt', 'file3.txt']
 
-# Define a function to apply
-def example_func_2cols(x, y):
-    return x + y
-
-def example_func_3cols(x, y, z):
-    return x * y * z
-
-# Apply the function to 2 columns
-result_2cols = apply_function_to_columns(df, example_func_2cols, 'A', 'B')
-print(result_2cols)
-
-# Apply the function to 3 columns
-result_3cols = apply_function_to_columns(df, example_func_3cols, 'A', 'B', 'C')
-print(result_3cols)
+try:
+    check_files_exist(directory, files_to_check)
+except FileNotFoundError as e:
+    print(e)
