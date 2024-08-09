@@ -14,24 +14,30 @@ def get_all_files_info(directory):
 
     return files_info
 
-def check_files_exist(directory, file_list):
-    # Get the dictionary with all files and their modification dates
+def check_files_exist_and_dates(directory, file_list):
     all_files_info = get_all_files_info(directory)
     
-    # Check if all files in the list exist in the dictionary
-    for file in file_list:
+    for file, expected_date in file_list.items():
         if file not in all_files_info:
             print(f"Error: '{file}' does not exist in the directory.")
-            # Exit the program
             raise FileNotFoundError(f"File '{file}' not found in directory.")
+        
+        actual_date = all_files_info[file]
+        if actual_date != expected_date:
+            print(f"Error: '{file}' modification date does not match. Expected: {expected_date}, Found: {actual_date}")
+            raise ValueError(f"Date mismatch for file '{file}'. Expected: {expected_date}, Found: {actual_date}")
     
-    print("All files exist.")
+    print("All files exist with the correct dates.")
 
 # Example usage:
 directory = '/path/to/your/files'
-files_to_check = ['file1.txt', 'file2.txt', 'file3.txt']
+files_to_check = {
+    'file1.txt': datetime(2024, 8, 1, 10, 0, 0),
+    'file2.txt': datetime(2024, 8, 2, 11, 0, 0),
+    'file3.txt': datetime(2024, 8, 3, 12, 0, 0)
+}
 
 try:
-    check_files_exist(directory, files_to_check)
-except FileNotFoundError as e:
+    check_files_exist_and_dates(directory, files_to_check)
+except (FileNotFoundError, ValueError) as e:
     print(e)
