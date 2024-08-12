@@ -11,7 +11,8 @@ def compare_columns(cursor, df, schema_name, table_name):
     - table_name: str, name of the Oracle table (case-insensitive)
 
     Returns:
-    - A dictionary with comparison results and detailed match statements
+    - A dictionary with comparison results including whether all columns match (True/False),
+      and detailed information on matched, missing, and extra columns.
     """
     # Fetch column names from Oracle table
     cursor.execute("""
@@ -28,17 +29,24 @@ def compare_columns(cursor, df, schema_name, table_name):
     oracle_columns_set = set(col.upper() for col in oracle_columns)
 
     # Compare the sets
+    matched_columns = df_columns_set & oracle_columns_set
     missing_in_df = oracle_columns_set - df_columns_set
     extra_in_df = df_columns_set - oracle_columns_set
 
-    if not missing_in_df and not extra_in_df:
-        statement = "All columns match between the DataFrame and the Oracle table."
-    else:
-        statement = "Columns do not match between the DataFrame and the Oracle table."
-
+    match = not missing_in_df and not extra_in_df
+    
+    # Print the results
+    print("Matched columns:")
+    print(matched_columns if matched_columns else "None")
+    print("\nMissing in DataFrame:")
+    print(missing_in_df if missing_in_df else "None")
+    print("\nExtra in DataFrame:")
+    print(extra_in_df if extra_in_df else "None")
+    
+    # Return detailed information and match status
     result = {
-        'match': not missing_in_df and not extra_in_df,
-        'statement': statement,
+        'match': match,
+        'matched_columns': list(matched_columns),
         'missing_in_df': list(missing_in_df),
         'extra_in_df': list(extra_in_df)
     }
@@ -51,6 +59,9 @@ import cx_Oracle
 # Create your DataFrame
 df = pd.DataFrame({
     # Your DataFrame data here
+    'column1': [],
+    'column2': [],
+    # Add columns as needed
 })
 
 # Connect to Oracle and create cursor
@@ -68,8 +79,8 @@ comparison_result = compare_columns(cursor, df, schema_name, table_name)
 cursor.close()
 conn.close()
 
-# Print results
-print(comparison_result['statement'])
-if not comparison_result['match']:
-    print(f"Missing in DataFrame: {comparison_result['missing_in_df']}")
-    print(f"Extra in DataFrame: {comparison_result['extra_in_df']}")
+# Print whether all columns match or not
+if comparison_result['match']:
+    print("\nAll columns match between the DataFrame and the Oracle table.")
+else:
+    print("\nColumns do not match between the DataFrame and the Oracle table.")
