@@ -1,49 +1,60 @@
-# Get the list of workbooks available to the authenticated user
-all_workbooks, pagination_item = server.workbooks.get()
+import tableauserverclient as TSC
 
-# Optionally, filter workbooks by name
-workbook_name = "Your Workbook Name"
-workbook = next((wb for wb in all_workbooks if wb.name == workbook_name), None)
+# Tableau Server or Tableau Online connection details
+server_url = "https://your-tableau-server-url"
+tableau_username = "your-username"
+tableau_password = "your-password"
+site_id = ""  # Empty string for the default site
 
-if workbook:
-    # Get details of the workbook
-    server.workbooks.populate_views(workbook)
+# The View ID of the dashboard from which you want to extract data
+view_id = "your-view-id"
 
-    # Loop through views to find your specific dashboard view
-    dashboard_name = "Your Dashboard Name"
-    dashboard_view = next((v for v in workbook.views if v.name == dashboard_name), None)
+# Create a Tableau Server Auth object
+tableau_auth = TSC.TableauAuth(tableau_username, tableau_password, site_id)
 
-    if dashboard_view:
-        # Fetch the full underlying data for the view
-        req_option = TSC.RequestOptions()
+# Create a server object
+server = TSC.Server(server_url, use_server_version=True)
 
-        # Pagination to handle large data sets
-        all_rows = []
-        page_num = 0
+# Sign in to the server
+with server.auth.sign_in(tableau_auth):
+    print("Signed in to Tableau Server successfully!")
+    
+    # Get the view by ID
+    try:
+        dashboard_view = server.views.get_by_id(view_id)
 
-        while True:
-            req_option.page_size = 1000  # Adjust page size as necessary
-            req_option.page_number = page_num
+        if dashboard_view:
+            # Fetch the full underlying data for the view
+            req_option = TSC.RequestOptions()
 
-            server.views.populate_csv(dashboard_view, req_options=req_option)
-            data = dashboard_view.content.splitlines()
+            # Pagination to handle large data sets
+            all_rows = []
+            page_num = 0
 
-            if not data:
-                break
+            while True:
+                req_option.page_size = 1000  # Adjust page size as necessary
+                req_option.page_number = page_num
 
-            all_rows.extend(data)
+                server.views.populate_csv(dashboard_view, req_options=req_option)
+                data = dashboard_view.content.splitlines()
 
-            if len(data) < req_option.page_size:
-                break
+                if not data:
+                    break
 
-            page_num += 1
+                all_rows.extend(data)
 
-        # Optionally, save the full data to a file
-        with open("full_dashboard_data.csv", "w") as f:
-            f.write("\n".join(all_rows))
+                if len(data) < req_option.page_size:
+                    break
 
-        print("Full data extracted and saved successfully!")
-    else:
-        print(f"Dashboard '{dashboard_name}' not found in workbook '{workbook_name}'.")
-else:
-    print(f"Workbook '{workbook_name}' not found.")
+                page_num += 1
+
+            # Optionally, save the full data to a file
+            with open("full_dashboard_data.csv", "w") as f:
+                f.write("\n".join(all_rows))
+
+            print("Full data extracted and saved successfully!")
+        else:
+            print(f"View with ID '{view_id}' not found.")
+
+    except Exception as e:
+        print(f"An error occurred: {e}")
