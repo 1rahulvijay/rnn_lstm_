@@ -19,11 +19,14 @@ server = TSC.Server(server_url, use_server_version=True)
 with server.auth.sign_in(tableau_auth):
     print("Signed in to Tableau Server successfully!")
     
-    # Get the view by ID
     try:
+        # Fetch the view by ID
         dashboard_view = server.views.get_by_id(view_id)
 
         if dashboard_view:
+            # Ensure the view is fully populated with details
+            server.views.populate_csv(dashboard_view)
+
             # Initialize an empty list to store all rows of data
             all_rows = []
 
@@ -35,11 +38,11 @@ with server.auth.sign_in(tableau_auth):
                 req_option.page_size = 1000  # Adjust page size as necessary
                 req_option.page_number = page_num
 
-                # Populate CSV data for the current page
+                # Fetch CSV data for the current page
                 csv_data = server.views.populate_csv(dashboard_view, req_options=req_option)
 
-                # Split CSV data into lines and add to the list
-                data_lines = csv_data.decode('utf-8').splitlines()
+                # Split CSV data into lines
+                data_lines = csv_data.splitlines()
 
                 # If no data is returned, we've reached the end of the dataset
                 if not data_lines:
