@@ -24,9 +24,6 @@ with server.auth.sign_in(tableau_auth):
         dashboard_view = server.views.get_by_id(view_id)
 
         if dashboard_view:
-            # Ensure the view is fully populated with details
-            server.views.populate_csv(dashboard_view)
-
             # Initialize an empty list to store all rows of data
             all_rows = []
 
@@ -38,21 +35,14 @@ with server.auth.sign_in(tableau_auth):
                 req_option.page_size = 1000  # Adjust page size as necessary
                 req_option.page_number = page_num
 
-                # Fetch CSV data for the current page
+                # Populate CSV data for the current page
                 csv_data = server.views.populate_csv(dashboard_view, req_options=req_option)
 
-                # Split CSV data into lines
-                data_lines = csv_data.splitlines()
-
-                # If no data is returned, we've reached the end of the dataset
-                if not data_lines:
-                    break
-
-                # Append the data to all_rows
-                all_rows.extend(data_lines)
+                # Add data to the list
+                all_rows.append(csv_data)
 
                 # Break if the number of rows fetched is less than the page size
-                if len(data_lines) < req_option.page_size:
+                if len(csv_data.splitlines()) < req_option.page_size:
                     break
 
                 page_num += 1
