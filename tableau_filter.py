@@ -24,8 +24,8 @@ with server.auth.sign_in(tableau_auth):
         dashboard_view = server.views.get_by_id(view_id)
 
         if dashboard_view:
-            # Initialize an empty list to store all rows of data
-            all_rows = []
+            # Initialize an empty string to store all data
+            all_data = ""
 
             # Pagination to handle large data sets
             req_option = TSC.RequestOptions()
@@ -38,18 +38,21 @@ with server.auth.sign_in(tableau_auth):
                 # Populate CSV data for the current page
                 csv_data = server.views.populate_csv(dashboard_view, req_options=req_option)
 
-                # Add data to the list
-                all_rows.append(csv_data)
+                # Check if this is the first page of data
+                if page_num == 1:
+                    all_data = csv_data  # Start with the header and data
+                else:
+                    all_data += "\n" + "\n".join(csv_data.splitlines()[1:])  # Skip header on subsequent pages
 
                 # Break if the number of rows fetched is less than the page size
-                if len(csv_data.splitlines()) < req_option.page_size:
+                if len(csv_data.splitlines()) < req_option.page_size + 1:  # +1 to account for the header row
                     break
 
                 page_num += 1
 
-            # Optionally, save the full data to a file
+            # Save the full data to a file
             with open("full_dashboard_data.csv", "w", encoding="utf-8") as f:
-                f.write("\n".join(all_rows))
+                f.write(all_data)
 
             print("Full data extracted and saved successfully!")
         else:
