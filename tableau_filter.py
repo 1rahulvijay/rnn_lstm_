@@ -24,32 +24,38 @@ with server.auth.sign_in(tableau_auth):
         dashboard_view = server.views.get_by_id(view_id)
 
         if dashboard_view:
-            # Fetch the full underlying data for the view
-            req_option = TSC.RequestOptions()
+            # Initialize an empty list to store all rows of data
+            all_rows = []
 
             # Pagination to handle large data sets
-            all_rows = []
-            page_num = 0
+            req_option = TSC.RequestOptions()
+            page_num = 1
 
             while True:
                 req_option.page_size = 1000  # Adjust page size as necessary
                 req_option.page_number = page_num
 
-                server.views.populate_csv(dashboard_view, req_options=req_option)
-                data = dashboard_view.content.splitlines()
+                # Populate CSV data for the current page
+                csv_data = server.views.populate_csv(dashboard_view, req_options=req_option)
 
-                if not data:
+                # Split CSV data into lines and add to the list
+                data_lines = csv_data.decode('utf-8').splitlines()
+
+                # If no data is returned, we've reached the end of the dataset
+                if not data_lines:
                     break
 
-                all_rows.extend(data)
+                # Append the data to all_rows
+                all_rows.extend(data_lines)
 
-                if len(data) < req_option.page_size:
+                # Break if the number of rows fetched is less than the page size
+                if len(data_lines) < req_option.page_size:
                     break
 
                 page_num += 1
 
             # Optionally, save the full data to a file
-            with open("full_dashboard_data.csv", "w") as f:
+            with open("full_dashboard_data.csv", "w", encoding="utf-8") as f:
                 f.write("\n".join(all_rows))
 
             print("Full data extracted and saved successfully!")
