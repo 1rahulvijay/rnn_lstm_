@@ -1,19 +1,27 @@
 import pandas as pd
 
 # Assuming you have the data in the respective dataframes:
-# tb1_limits_df = pd.read_csv('tb1_limits.csv')  # Replace with your actual data source
-# tbl_limits_d1_df = pd.read_csv('tbl_limits_d1.csv')  # Replace with your actual data source
+# tbl_limits_df = pd.read_csv('tbl_limits.csv')  # Replace with your actual data source
+# il_availability_status_df = pd.read_csv('il_availability_status.csv')  # Replace with your actual data source
 
 # Performing a left join
-merged_df = pd.merge(tb1_limits_df, tbl_limits_d1_df, left_on='KEY', right_on='KEY', how='left', suffixes=('', '_d1'))
+merged_df = pd.merge(tbl_limits_df, il_availability_status_df, left_on='LINE_CD_2', right_on='Facility ID', how='left')
 
-# Applying the filter condition
-filtered_df = merged_df[(merged_df['RECORD_STAT'] == "0") & (merged_df['KEY_d1'].isna())]
+# Applying the filter conditions
+filtered_df = merged_df[
+    (merged_df['CHECKER_DT_STAMP'] < pd.to_datetime('now') - pd.DateOffset(days=(1899-1970)*365 + 1)) & 
+    (merged_df['MAKER_ID'] == "RAPUPLD")
+]
 
-# Selecting the desired columns
-result_df = filtered_df[['LIAB_ID', 'LINE_CD', 'LINE_SERIAL', 'MAIN_LINE', 'AVAILABILITY_FLAG', 
-                         'LIMIT_AMOUNT', 'DAYLIGHT_OD_LIMIT', 'INTERNAL_REMARKS', 'MAKER_ID', 
-                         'RECORD_STAT', 'LINE_START_DATE', 'KEY']]
+# Selecting and grouping by the desired columns
+grouped_df = filtered_df.groupby(
+    ['LIAB_ID', 'LINE_CD_2', 'LINE_SERIAL', 'MAIN_LINE', 'AVAILABILITY_FLAG', 
+     'LIMIT_AMOUNT', 'RECORD_STAT', 'CHECKER_DT_STAMP', 'MAKER_ID', 'Availability status desc'],
+    as_index=False
+).first()  # You can change this aggregation method if needed
+
+# Ordering the result by 'LIAB_ID'
+result_df = grouped_df.sort_values(by='LIAB_ID')
 
 # Displaying the result
 print(result_df)
