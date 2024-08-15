@@ -1,27 +1,19 @@
-from datetime import datetime, date
+import pandas as pd
 
-def check_files_updated(file_mod_dates, files_to_read, expected_date=None):
-    """
-    Check if the files in `files_to_read` have been updated after `expected_date`.
-    If all files are up-to-date, print an info message. Otherwise, raise a ValueError
-    with the file name and its modification date.
+# Assuming you have the data in the respective dataframes:
+# tb1_limits_df = pd.read_csv('tb1_limits.csv')  # Replace with your actual data source
+# tbl_limits_d1_df = pd.read_csv('tbl_limits_d1.csv')  # Replace with your actual data source
 
-    :param file_mod_dates: Dictionary with file names as keys and modification dates as values (in "%Y-%m-%d" format).
-    :param files_to_read: List of file names to check.
-    :param expected_date: The date to compare the file modification dates against (datetime object).
-                          Defaults to today's date.
-    """
-    if expected_date is None:
-        expected_date = datetime.strptime(date.today().strftime("%Y-%m-%d"), "%Y-%m-%d")
-    
-    for file_name in files_to_read:
-        if file_name in file_mod_dates:
-            mod_date_str = file_mod_dates[file_name]
-            mod_date = datetime.strptime(mod_date_str, "%Y-%m-%d")
-            
-            if mod_date <= expected_date:
-                raise ValueError(f"File '{file_name}' is not up-to-date. Last modified on {mod_date_str}.")
-        else:
-            raise ValueError(f"File '{file_name}' not found in the modification date dictionary.")
-    
-    print("All files are up-to-date.")
+# Performing a left join
+merged_df = pd.merge(tb1_limits_df, tbl_limits_d1_df, left_on='KEY', right_on='KEY', how='left', suffixes=('', '_d1'))
+
+# Applying the filter condition
+filtered_df = merged_df[(merged_df['RECORD_STAT'] == "0") & (merged_df['KEY_d1'].isna())]
+
+# Selecting the desired columns
+result_df = filtered_df[['LIAB_ID', 'LINE_CD', 'LINE_SERIAL', 'MAIN_LINE', 'AVAILABILITY_FLAG', 
+                         'LIMIT_AMOUNT', 'DAYLIGHT_OD_LIMIT', 'INTERNAL_REMARKS', 'MAKER_ID', 
+                         'RECORD_STAT', 'LINE_START_DATE', 'KEY']]
+
+# Displaying the result
+print(result_df)
