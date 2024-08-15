@@ -1,6 +1,6 @@
 import pandas as pd
 
-# Define the condition to ensure that the old record exists
+# Define a condition to ensure that the old record exists (i.e., none of the key _OLD columns are NaN)
 old_record_exists = (
     merged_df["LIMIT_AMOUNT_OLD"].notna() &
     merged_df["DAYLIGHT_OD_LIMIT_OLD"].notna() &
@@ -16,13 +16,12 @@ changes_detected = (
     (merged_df["LINE_CURRENCY_NEW"] != merged_df["LINE_CURRENCY_OLD"])
 )
 
-# Combine conditions
+# Combine the conditions
 change_conditions = (
-    (merged_df["RECORD_STAT_NEW"] == "0") &  # Only include records with RECORD_STAT_NEW == 0
-    (merged_df["KEY_REC"].notna()) &         # Ensure KEY_REC is not null
-    old_record_exists &                      # Ensure old record exists
-    changes_detected                         # Detect any changes in the fields
+    (merged_df["RECORD_STAT_NEW"] == "0") &  # Only consider records with RECORD_STAT_NEW == "0"
+    old_record_exists &                      # Exclude rows where old records are NaN
+    changes_detected                         # Capture any changes between new and old values
 )
 
-# Apply the conditions to filter the DataFrame
+# Apply the filter to get the changed lines
 changed_lines = merged_df[change_conditions]
