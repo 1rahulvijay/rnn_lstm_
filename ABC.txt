@@ -1,43 +1,28 @@
-import os
-from datetime import datetime
+import pandas as pd
 
-def get_all_files_info(directory):
-    files_info = {}
+# Define the condition to ensure that the old record exists
+old_record_exists = (
+    merged_df["LIMIT_AMOUNT_OLD"].notna() &
+    merged_df["DAYLIGHT_OD_LIMIT_OLD"].notna() &
+    merged_df["AVAILABILITY_FLAG_OLD"].notna() &
+    merged_df["LINE_CURRENCY_OLD"].notna()
+)
 
-    for filename in os.listdir(directory):
-        filepath = os.path.join(directory, filename)
-        
-        if os.path.isfile(filepath):
-            mod_time = os.path.getmtime(filepath)
-            mod_time = datetime.fromtimestamp(mod_time)
-            files_info[filename] = mod_time
+# Define the condition to capture changes
+changes_detected = (
+    (merged_df["LIMIT_AMOUNT_NEW"] != merged_df["LIMIT_AMOUNT_OLD"]) |
+    (merged_df["DAYLIGHT_OD_LIMIT_NEW"] != merged_df["DAYLIGHT_OD_LIMIT_OLD"]) |
+    (merged_df["AVAILABILITY_FLAG_NEW"] != merged_df["AVAILABILITY_FLAG_OLD"]) |
+    (merged_df["LINE_CURRENCY_NEW"] != merged_df["LINE_CURRENCY_OLD"])
+)
 
-    return files_info
+# Combine conditions
+change_conditions = (
+    (merged_df["RECORD_STAT_NEW"] == "0") &  # Only include records with RECORD_STAT_NEW == 0
+    (merged_df["KEY_REC"].notna()) &         # Ensure KEY_REC is not null
+    old_record_exists &                      # Ensure old record exists
+    changes_detected                         # Detect any changes in the fields
+)
 
-def check_files_exist_and_dates(directory, file_list):
-    all_files_info = get_all_files_info(directory)
-    
-    for file, expected_date in file_list.items():
-        if file not in all_files_info:
-            print(f"Error: '{file}' does not exist in the directory.")
-            raise FileNotFoundError(f"File '{file}' not found in directory.")
-        
-        actual_date = all_files_info[file]
-        if actual_date != expected_date:
-            print(f"Error: '{file}' modification date does not match. Expected: {expected_date}, Found: {actual_date}")
-            raise ValueError(f"Date mismatch for file '{file}'. Expected: {expected_date}, Found: {actual_date}")
-    
-    print("All files exist with the correct dates.")
-
-# Example usage:
-directory = '/path/to/your/files'
-files_to_check = {
-    'file1.txt': datetime(2024, 8, 1, 10, 0, 0),
-    'file2.txt': datetime(2024, 8, 2, 11, 0, 0),
-    'file3.txt': datetime(2024, 8, 3, 12, 0, 0)
-}
-
-try:
-    check_files_exist_and_dates(directory, files_to_check)
-except (FileNotFoundError, ValueError) as e:
-    print(e)
+# Apply the conditions to filter the DataFrame
+changed_lines = merged_df[change_conditions]
