@@ -1,1 +1,23 @@
 
+# Project Title
+
+This project contains a set of Python classes designed to facilitate common tasks such as interacting with Oracle databases, sending emails, reading Excel files, and loading data to an Oracle database.
+
+## Table of Contents
+
+- [Getting Started](#getting-started)
+- [Classes](#classes)
+  - [GettingDataFromOracle](#gettingdatafromoracle)
+  - [SendingMail](#sendingmail)
+  - [ReadingExcelFilesAndDirectories](#readingexcelfilesanddirectories)
+  - [LoadingDataToOracle](#loadingdatatooracle)
+- [Dependencies](#dependencies)
+- [Usage](#usage)
+- [License](#license)
+
+## Getting Started
+
+Clone the repository to your local machine:
+
+```bash
+git clone https://github.com/yourusername/your-repository.git
