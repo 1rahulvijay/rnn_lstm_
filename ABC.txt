@@ -1,40 +1,37 @@
 import pandas as pd
 
 # Assuming you have the data in the respective dataframes:
+# tb1_acc_today_df = pd.read_csv('tb1_acc_today.csv')  # Replace with your actual data source
 # tbl_limits_df = pd.read_csv('tbl_limits.csv')  # Replace with your actual data source
-# tbl_limits_d1_df = pd.read_csv('tbl_limits_d1.csv')  # Replace with your actual data source
+# il_availability_status_df = pd.read_csv('il_availability_status.csv')  # Replace with your actual data source
 
-# Performing a left join
-merged_df = pd.merge(tbl_limits_df, tbl_limits_d1_df, left_on='KEY', right_on='KEY', how='left', suffixes=('', '_OLD'))
+# Step 1: Perform the first left join between tb1_acc_today_df and tbl_limits_df
+merged_df = pd.merge(tb1_acc_today_df, tbl_limits_df, left_on='KEY2', right_on='KEY', how='left')
 
-# Creating new columns to represent the differences
-merged_df['LIMIT_DIFF'] = merged_df['LIMIT_AMOUNT'] - merged_df['LIMIT_AMOUNT_OLD']
-merged_df['DOL_DIFF'] = merged_df['DAYLIGHT_OD_LIMIT'] - merged_df['DAYLIGHT_OD_LIMIT_OLD']
+# Step 2: Perform the second left join with il_availability_status_df
+merged_df = pd.merge(merged_df, il_availability_status_df, left_on='LINE_CD_2', right_on='Facility ID', how='left')
 
-# Applying the filter conditions
+# Step 3: Apply the filtering conditions in the HAVING clause
 filtered_df = merged_df[
-    (
-        (merged_df['RECORD_STAT'] == "0") & 
-        (merged_df['KEY_OLD'].notna()) & 
-        (merged_df['LIMIT_DIFF'] != 0)
-    ) | (
-        (merged_df['RECORD_STAT'] == "0") & 
-        (merged_df['KEY_OLD'].notna()) & 
-        (merged_df['DOL_DIFF'] != 0)
-    ) | (
-        (merged_df['RECORD_STAT'] == "0") & 
-        (merged_df['KEY_OLD'].notna()) & 
-        (merged_df['AVAILABILITY_FLAG'] != merged_df['AVAILABILITY_FLAG_OLD'])
-    )
+    (merged_df['RECORD_STAT'] == "C") | (merged_df['AVAILABILITY_FLAG'] == "N")
 ]
 
-# Selecting the desired columns
+# Step 4: Select the columns specified in the SELECT clause
 result_df = filtered_df[[
-    'LIAB_ID', 'LINE_CD', 'LINE_SERIAL', 'MAIN_LINE', 'LIMIT_AMOUNT_OLD', 
-    'LIMIT_AMOUNT', 'LIMIT_DIFF', 'DAYLIGHT_OD_LIMIT_OLD', 'DAYLIGHT_OD_LIMIT', 
-    'DOL_DIFF', 'INTERNAL_REMARKS', 'MAKER_ID', 'AVAILABILITY_FLAG_OLD', 
-    'AVAILABILITY_FLAG', 'RECORD_STAT', 'LINE_START_DATE', 'KEY'
+    'LIAB_ID', 'CUST_NO', 'CUST_AC_NO', 'ACY_AVL_BAL', 'LINE_CD_2', 
+    'AVAILABILITY_FLAG', 'LIMIT_AMOUNT', 'DAYLIGHT_OD_LIMIT', 
+    'INTERNAL_REMARKS', 'MAKER_ID', 'RECORD_STAT', 'Availability status desc'
 ]]
 
-# Displaying the result
-print(result_df)
+# Step 5: Group by the specified columns (in Pandas, this doesn't typically change the structure unless you apply an aggregation)
+grouped_df = result_df.groupby([
+    'LIAB_ID', 'CUST_NO', 'CUST_AC_NO', 'ACY_AVL_BAL', 'LINE_CD_2', 
+    'AVAILABILITY_FLAG', 'LIMIT_AMOUNT', 'DAYLIGHT_OD_LIMIT', 
+    'INTERNAL_REMARKS', 'MAKER_ID', 'RECORD_STAT', 'Availability status desc'
+], as_index=False).first()  # .first() keeps the first occurrence of each group, but you can change this method
+
+# Step 6: Sort the resulting DataFrame by 'LIAB_ID'
+grouped_df = grouped_df.sort_values(by='LIAB_ID')
+
+# Display the final result
+print(grouped_df)
