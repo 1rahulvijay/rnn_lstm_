@@ -1,41 +1,90 @@
+from exchangelib import Credentials, Account, DELEGATE, Message, FileAttachment
+import os
 
-# Define the rules for saving attachments
-rules = [
-    {
-        'subject_contains': 'Invoice',
-        'sender_contains': '@clientdomain.com',
-        'attachment_extension': '.xlsx',
-        'save_dir': 'invoices/client_invoices'
-    },
-    {
-        'subject_contains': 'Report',
-        'sender_contains': '@company.com',
-        'attachment_extension': '.csv',
-        'save_dir': 'reports/company_reports'
-    },
-    {
-        'subject_contains': None,
-        'sender_contains': '@partner.com',
-        'attachment_extension': '.xls',
-        'save_dir': 'partners/partner_reports'
-    },
-    {
-        'subject_contains': None,
-        'sender_contains': None,
-        'attachment_extension': '.pdf',
-        'save_dir': 'documents/pdf_files'
-    }
-]
+class OutlookAttachmentDownloader:
+    def __init__(self, username, password, email, save_base_dir='attachments', num_emails=100, rules=None):
+        """
+        Initialize the OutlookAttachmentDownloader with email credentials and settings.
 
-# Initialize the downloader with rules
-downloader = OutlookAttachmentDownloader(
-    username='your_username',
-    password='your_password',
-    email='your_email@domain.com',
-    save_base_dir='attachments',
-    num_emails=100,
-    rules=rules
-)
+        Parameters:
+        - username (str): Username for the Exchange account.
+        - password (str): Password for the Exchange account.
+        - email (str): Email address to connect to.
+        - save_base_dir (str): Base directory to save attachments.
+        - num_emails (int): Number of recent emails to process.
+        - rules (list): A list of dictionaries, where each dictionary specifies conditions 
+                        for saving attachments. Each dictionary should have:
+            - 'subject_contains' (str, optional): A substring to check in the email subject.
+            - 'sender_contains' (str, optional): A substring to check in the sender's email address.
+            - 'attachment_extension' (str, optional): File extension to check in the attachment.
+            - 'save_dir' (str): Subdirectory under the base directory to save the attachment.
+        """
+        self.credentials = Credentials(username=username, password=password)
+        self.account = Account(email, credentials=self.credentials, autodiscover=True, access_type=DELEGATE)
+        self.save_base_dir = save_base_dir
+        self.num_emails = num_emails
+        self.rules = rules if rules else []
 
-# Download attachments based on the defined rules
-downloader.download_attachments()
+        # Ensure the base directory exists
+        if not os.path.exists(self.save_base_dir):
+            os.makedirs(self.save_base_dir)
+    
+    def get_save_directory(self, email_subject, sender_address, attachment_name):
+        """
+        Determines the save directory based on the rules provided.
+
+        Returns the directory path based on matching rules, or the default 'others' directory if no match is found.
+        """
+        for rule in self.rules:
+            subject_match = rule.get('subject_contains') in email_subject if rule.get('subject_contains') else True
+            sender_match = rule.get('sender_contains') in sender_address if rule.get('sender_contains') else True
+            attachment_match = attachment_name.endswith(rule.get('attachment_extension')) if rule.get('attachment_extension') else True
+            
+            if subject_match and sender_match and attachment_match:
+                # Combine base directory with the specified subdirectory in the rule
+                save_dir = os.path.join(self.save_base_dir, rule['save_dir'])
+                if not os.path.exists(save_dir):
+                    os.makedirs(save_dir)
+                return save_dir
+        
+        # Default directory if no rules match
+        default_dir = os.path.join(self.save_base_dir, 'others')
+        if not os.path.exists(default_dir):
+            os.makedirs(default_dir)
+        return default_dir
+    
+    def download_attachments(self):
+        """
+        Iterates through emails in the inbox and downloads the attachments based on the specified rules.
+        """
+        # Access the inbox folder
+        inbox = self.account.inbox
+
+        # Iterate through emails in the inbox
+        for item in inbox.all().order_by('-datetime_received')[:self.num_emails]:
+            if isinstance(item, Message):
+                for attachment in item.attachments:
+                    if isinstance(attachment, FileAttachment):
+                        # Determine the save directory based on the provided rules
+                        save_dir = self.get_save_directory(item.subject, item.sender.email_address, attachment.name)
+                        
+                        # Save the attachment to the determined directory
+                        file_path = os.path.join(save_dir, attachment.name)
+                        with open(file_path, 'wb') as f:
+                            f.write(attachment.content)
+                        
+                        print(f'Downloaded {attachment.name} from {item.sender.email_address} to {file_path}')
+    
+    def set_base_directory(self, new_base_dir):
+        """
+        Sets a new base directory for saving attachments.
+        """
+        self.save_base_dir = new_base_dir
+        if not os.path.exists(self.save_base_dir):
+            os.makedirs(self.save_base_dir)
+
+    def set_rules(self, new_rules):
+        """
+        Sets new rules for determining where to save attachments.
+        """
+        self.rules = new_rules if new_rules else []
