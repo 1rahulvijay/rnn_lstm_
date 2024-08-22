@@ -1,1 +1,41 @@
 
+# Define the rules for saving attachments
+rules = [
+    {
+        'subject_contains': 'Invoice',
+        'sender_contains': '@clientdomain.com',
+        'attachment_extension': '.xlsx',
+        'save_dir': 'invoices/client_invoices'
+    },
+    {
+        'subject_contains': 'Report',
+        'sender_contains': '@company.com',
+        'attachment_extension': '.csv',
+        'save_dir': 'reports/company_reports'
+    },
+    {
+        'subject_contains': None,
+        'sender_contains': '@partner.com',
+        'attachment_extension': '.xls',
+        'save_dir': 'partners/partner_reports'
+    },
+    {
+        'subject_contains': None,
+        'sender_contains': None,
+        'attachment_extension': '.pdf',
+        'save_dir': 'documents/pdf_files'
+    }
+]
+
+# Initialize the downloader with rules
+downloader = OutlookAttachmentDownloader(
+    username='your_username',
+    password='your_password',
+    email='your_email@domain.com',
+    save_base_dir='attachments',
+    num_emails=100,
+    rules=rules
+)
+
+# Download attachments based on the defined rules
+downloader.download_attachments()
