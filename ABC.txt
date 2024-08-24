@@ -1,90 +1,28 @@
-from exchangelib import Credentials, Account, DELEGATE, Message, FileAttachment
-import os
+import pandas as pd
 
-class OutlookAttachmentDownloader:
-    def __init__(self, username, password, email, save_base_dir='attachments', num_emails=100, rules=None):
-        """
-        Initialize the OutlookAttachmentDownloader with email credentials and settings.
+# Specify the file path
+file_path = 'your_large_file.csv'
 
-        Parameters:
-        - username (str): Username for the Exchange account.
-        - password (str): Password for the Exchange account.
-        - email (str): Email address to connect to.
-        - save_base_dir (str): Base directory to save attachments.
-        - num_emails (int): Number of recent emails to process.
-        - rules (list): A list of dictionaries, where each dictionary specifies conditions 
-                        for saving attachments. Each dictionary should have:
-            - 'subject_contains' (str, optional): A substring to check in the email subject.
-            - 'sender_contains' (str, optional): A substring to check in the sender's email address.
-            - 'attachment_extension' (str, optional): File extension to check in the attachment.
-            - 'save_dir' (str): Subdirectory under the base directory to save the attachment.
-        """
-        self.credentials = Credentials(username=username, password=password)
-        self.account = Account(email, credentials=self.credentials, autodiscover=True, access_type=DELEGATE)
-        self.save_base_dir = save_base_dir
-        self.num_emails = num_emails
-        self.rules = rules if rules else []
+# Specify the chunk size (number of rows per chunk)
+chunk_size = 10000  # Adjust as needed
 
-        # Ensure the base directory exists
-        if not os.path.exists(self.save_base_dir):
-            os.makedirs(self.save_base_dir)
-    
-    def get_save_directory(self, email_subject, sender_address, attachment_name):
-        """
-        Determines the save directory based on the rules provided.
+# Create an empty list to hold the chunks
+chunks = []
 
-        Returns the directory path based on matching rules, or the default 'others' directory if no match is found.
-        """
-        for rule in self.rules:
-            subject_match = rule.get('subject_contains') in email_subject if rule.get('subject_contains') else True
-            sender_match = rule.get('sender_contains') in sender_address if rule.get('sender_contains') else True
-            attachment_match = attachment_name.endswith(rule.get('attachment_extension')) if rule.get('attachment_extension') else True
-            
-            if subject_match and sender_match and attachment_match:
-                # Combine base directory with the specified subdirectory in the rule
-                save_dir = os.path.join(self.save_base_dir, rule['save_dir'])
-                if not os.path.exists(save_dir):
-                    os.makedirs(save_dir)
-                return save_dir
-        
-        # Default directory if no rules match
-        default_dir = os.path.join(self.save_base_dir, 'others')
-        if not os.path.exists(default_dir):
-            os.makedirs(default_dir)
-        return default_dir
-    
-    def download_attachments(self):
-        """
-        Iterates through emails in the inbox and downloads the attachments based on the specified rules.
-        """
-        # Access the inbox folder
-        inbox = self.account.inbox
+# Create an iterator that reads the CSV file in chunks
+chunk_iterator = pd.read_csv(file_path, chunksize=chunk_size)
 
-        # Iterate through emails in the inbox
-        for item in inbox.all().order_by('-datetime_received')[:self.num_emails]:
-            if isinstance(item, Message):
-                for attachment in item.attachments:
-                    if isinstance(attachment, FileAttachment):
-                        # Determine the save directory based on the provided rules
-                        save_dir = self.get_save_directory(item.subject, item.sender.email_address, attachment.name)
-                        
-                        # Save the attachment to the determined directory
-                        file_path = os.path.join(save_dir, attachment.name)
-                        with open(file_path, 'wb') as f:
-                            f.write(attachment.content)
-                        
-                        print(f'Downloaded {attachment.name} from {item.sender.email_address} to {file_path}')
-    
-    def set_base_directory(self, new_base_dir):
-        """
-        Sets a new base directory for saving attachments.
-        """
-        self.save_base_dir = new_base_dir
-        if not os.path.exists(self.save_base_dir):
-            os.makedirs(self.save_base_dir)
+# Process each chunk
+for chunk in chunk_iterator:
+    # Perform operations on the chunk if needed
+    # For example, filtering or transforming data
 
-    def set_rules(self, new_rules):
-        """
-        Sets new rules for determining where to save attachments.
-        """
-        self.rules = new_rules if new_rules else []
+    # Append the processed chunk to the list
+    chunks.append(chunk)
+
+# Concatenate all chunks into a single DataFrame
+full_df = pd.concat(chunks, ignore_index=True)
+
+# Now you can work with the full DataFrame
+print(full_df.shape)
+print(full_df.head())
