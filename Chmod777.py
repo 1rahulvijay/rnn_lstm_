@@ -1,17 +1,13 @@
-import csv
+import pandas as pd
 
-# Specify the columns you want to exclude
-exclude_columns = ['Column1', 'Column2']
+# Sample DataFrame
+data = {'A': ['apple', 'banana', 'cherry'], 'B': ['dog', 'elephant', 'frog'], 'C': ['hat', 'igloo', 'jacket']}
+df = pd.DataFrame(data)
 
-# Read the CSV file
-with open('your_file.csv', mode='r', newline='') as csvfile:
-    reader = csv.DictReader(csvfile)
-    
-    # Create a list of fieldnames excluding the columns you want to remove
-    fieldnames = [field for field in reader.fieldnames if field not in exclude_columns]
-    
-    # Process the rows with filtered columns
-    for row in reader:
-        filtered_row = {key: value for key, value in row.items() if key not in exclude_columns}
-        # Do something with filtered_row
-        print(filtered_row)
+# Value to search
+value_to_search = 'banana'
+
+# Find columns containing the value
+columns_with_value = df.columns[df.isin([value_to_search]).any()]
+
+print(columns_with_value)
