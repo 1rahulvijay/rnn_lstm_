@@ -1,28 +1,14 @@
-# Switch to master branch
-git checkout master
+from datetime import datetime
+from dateutil.relativedelta import relativedelta
+import numpy as np
 
-# Delete the local development branch
-git branch -D development
+# Get the current date
+current_date = datetime.today().date()
 
-# Create a new development branch from master
-git checkout -b development
+# Calculate the date one month ago
+one_month_ago = current_date - relativedelta(months=1)
 
-# Force-push the new development branch to the remote repository
-git push origin development --force
+# Calculate the previous business day from one month ago
+previous_business_day = np.busday_offset(one_month_ago, 0, roll='backward')
 
-
-
-# Step 1: Switch to master branch
-git checkout master
-
-# Step 2: Pull the latest changes from the remote master branch
-git pull origin master
-
-# Step 3: Switch to the development branch
-git checkout development
-
-# Step 4: Reset development branch to be identical to master
-git reset --hard master
-
-# Step 5: Force-push the updated development branch to the remote repository
-git push origin development --force
+print(f"Past one-month business date: {previous_business_day}")
