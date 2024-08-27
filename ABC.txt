@@ -9,3 +9,20 @@ git checkout -b development
 
 # Force-push the new development branch to the remote repository
 git push origin development --force
+
+
+
+# Step 1: Switch to master branch
+git checkout master
+
+# Step 2: Pull the latest changes from the remote master branch
+git pull origin master
+
+# Step 3: Switch to the development branch
+git checkout development
+
+# Step 4: Reset development branch to be identical to master
+git reset --hard master
+
+# Step 5: Force-push the updated development branch to the remote repository
+git push origin development --force
