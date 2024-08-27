@@ -1,28 +1,11 @@
-import pandas as pd
+# Switch to master branch
+git checkout master
 
-# Specify the file path
-file_path = 'your_large_file.csv'
+# Delete the local development branch
+git branch -D development
 
-# Specify the chunk size (number of rows per chunk)
-chunk_size = 10000  # Adjust as needed
+# Create a new development branch from master
+git checkout -b development
 
-# Create an empty list to hold the chunks
-chunks = []
-
-# Create an iterator that reads the CSV file in chunks
-chunk_iterator = pd.read_csv(file_path, chunksize=chunk_size)
-
-# Process each chunk
-for chunk in chunk_iterator:
-    # Perform operations on the chunk if needed
-    # For example, filtering or transforming data
-
-    # Append the processed chunk to the list
-    chunks.append(chunk)
-
-# Concatenate all chunks into a single DataFrame
-full_df = pd.concat(chunks, ignore_index=True)
-
-# Now you can work with the full DataFrame
-print(full_df.shape)
-print(full_df.head())
+# Force-push the new development branch to the remote repository
+git push origin development --force
