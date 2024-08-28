@@ -1,14 +1,17 @@
-from datetime import datetime
-from dateutil.relativedelta import relativedelta
-import numpy as np
-
-# Get the current date
-current_date = datetime.today().date()
-
-# Calculate the date one month ago
-one_month_ago = current_date - relativedelta(months=1)
-
-# Calculate the previous business day from one month ago
-previous_business_day = np.busday_offset(one_month_ago, 0, roll='backward')
-
-print(f"Past one-month business date: {previous_business_day}")
+WITH LatestFacility AS (
+    SELECT 
+        fac_id,
+        dwh_update_time,
+        version_number,
+        ROW_NUMBER() OVER (PARTITION BY fac_id ORDER BY dwh_update_time DESC, version_number DESC) AS rn
+    FROM 
+        your_table_name
+)
+SELECT 
+    fac_id,
+    dwh_update_time,
+    version_number
+FROM 
+    LatestFacility
+WHERE 
+    rn = 1;
