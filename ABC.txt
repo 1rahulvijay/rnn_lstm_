@@ -12,12 +12,31 @@ WITH LatestFacility AS (
     WHERE 
         key_value = 'abc' 
         AND key_name = 'unit'
+),
+LatestStatus AS (
+    SELECT 
+        fac_id,
+        dwh_update_time,
+        a_status,
+        ROW_NUMBER() OVER (
+            PARTITION BY fac_id 
+            ORDER BY dwh_update_time DESC
+        ) AS rn
+    FROM 
+        another_table_name
 )
 SELECT 
-    fac_id,
-    dwh_update_time,
-    version_number
+    lf.fac_id,
+    lf.dwh_update_time AS facility_update_time,
+    lf.version_number,
+    ls.dwh_update_time AS status_update_time,
+    ls.a_status
 FROM 
-    LatestFacility
+    LatestFacility lf
+JOIN 
+    LatestStatus ls
+ON 
+    lf.fac_id = ls.fac_id
 WHERE 
-    rn = 1;
+    lf.rn = 1 
+    AND ls.rn = 1;
