@@ -3,9 +3,15 @@ WITH LatestFacility AS (
         fac_id,
         dwh_update_time,
         version_number,
-        ROW_NUMBER() OVER (PARTITION BY fac_id ORDER BY dwh_update_time DESC, version_number DESC) AS rn
+        ROW_NUMBER() OVER (
+            PARTITION BY fac_id 
+            ORDER BY dwh_update_time DESC, version_number DESC
+        ) AS rn
     FROM 
         your_table_name
+    WHERE 
+        key_value = 'abc' 
+        AND key_name = 'unit'
 )
 SELECT 
     fac_id,
