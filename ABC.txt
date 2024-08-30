@@ -1,42 +1,52 @@
-WITH LatestFacility AS (
-    SELECT 
-        fac_id,
-        dwh_update_time,
-        version_number,
-        ROW_NUMBER() OVER (
-            PARTITION BY fac_id 
-            ORDER BY dwh_update_time DESC, version_number DESC
-        ) AS rn
-    FROM 
-        your_table_name
-    WHERE 
-        key_value = 'abc' 
-        AND key_name = 'unit'
-),
-LatestStatus AS (
-    SELECT 
-        fac_id,
-        dwh_update_time,
-        a_status,
-        ROW_NUMBER() OVER (
-            PARTITION BY fac_id 
-            ORDER BY dwh_update_time DESC
-        ) AS rn
-    FROM 
-        another_table_name
-)
-SELECT 
-    lf.fac_id,
-    lf.dwh_update_time AS facility_update_time,
-    lf.version_number,
-    ls.dwh_update_time AS status_update_time,
-    ls.a_status
-FROM 
-    LatestFacility lf
-JOIN 
-    LatestStatus ls
-ON 
-    lf.fac_id = ls.fac_id
-WHERE 
-    lf.rn = 1 
-    AND ls.rn = 1;
+If you need to revert the merge or commit you just made, you can do so using Git commands. Here’s how to handle this:
+
+### 1. **Revert a Merge Commit**
+
+If you merged a branch and want to undo the merge, you can use the `git revert` command to create a new commit that undoes the changes from the merge:
+
+```bash
+git revert -m 1 <merge-commit-hash>
+```
+
+- `<merge-commit-hash>`: The hash of the merge commit you want to revert.
+- `-m 1`: This specifies the parent number to use. Typically, `1` is used to keep the first parent (usually your branch before the merge).
+
+### 2. **Reset to a Previous Commit**
+
+If you want to discard the merge commit entirely and move your branch back to a previous state, you can use `git reset`. Be cautious with this command, especially if you’ve already pushed changes to the remote repository, as it rewrites history.
+
+- **To reset to a specific commit (keeping changes in working directory):**
+
+  ```bash
+  git reset --soft <commit-hash>
+  ```
+
+- **To reset to a specific commit (discarding changes in working directory):**
+
+  ```bash
+  git reset --hard <commit-hash>
+  ```
+
+  Replace `<commit-hash>` with the hash of the commit you want to reset to.
+
+### 3. **Delete the Local Merge (if not yet pushed)**
+
+If you haven’t pushed the merge yet and want to undo it completely, you can use:
+
+```bash
+git reset --hard HEAD~1
+```
+
+This command moves the branch pointer back by one commit, effectively removing the last commit (which is the merge commit in this case).
+
+### 4. **Force Push (if you need to update remote)**
+
+If you had already pushed the changes and used `git reset`, you will need to force push the branch to update the remote repository:
+
+```bash
+git push origin your-branch --force
+```
+
+**Note:** Force pushing can overwrite commits on the remote repository, potentially affecting others working on the same branch. Use it with caution.
+
+Always double-check the commit hashes and be sure of the changes before proceeding with these commands.
