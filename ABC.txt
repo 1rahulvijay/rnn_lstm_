@@ -5,14 +5,14 @@ SELECT
     t1.id_version
 FROM 
     your_table t1
-INNER JOIN (
+JOIN (
     SELECT 
-        t2.id,
-        MAX(t2.id_version) AS max_version
+        id,
+        MAX(id_version) AS max_version
     FROM 
-        your_table t2
+        your_table
     GROUP BY 
-        t2.id
+        id
 ) latest 
     ON t1.id = latest.id 
     AND t1.id_version = latest.max_version
@@ -22,11 +22,11 @@ WHERE
         SELECT 
             1
         FROM 
-            your_table t3
+            your_table t2
         WHERE 
-            t3.id = t1.id
-            AND t3.id_version = latest.max_version
-            AND t3.unit <> 'Israel'
+            t2.id = t1.id
+            AND t2.id_version = latest.max_version
+            AND t2.unit <> 'Israel'
     )
 ORDER BY 
     t1.id_version DESC;
