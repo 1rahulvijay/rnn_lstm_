@@ -18,5 +18,15 @@ INNER JOIN (
     AND t1.id_version = latest.max_version
 WHERE 
     t1.unit = 'Israel'
+    AND NOT EXISTS (
+        SELECT 
+            1
+        FROM 
+            your_table t3
+        WHERE 
+            t3.id = t1.id
+            AND t3.id_version = latest.max_version
+            AND t3.unit <> 'Israel'
+    )
 ORDER BY 
     t1.id_version DESC;
