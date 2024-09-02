@@ -16,17 +16,12 @@ JOIN (
 ) latest 
     ON t1.id = latest.id 
     AND t1.id_version = latest.max_version
+LEFT JOIN your_table t2 
+    ON t1.id = t2.id 
+    AND t1.id_version = t2.id_version 
+    AND t2.unit <> 'Israel'
 WHERE 
     t1.unit = 'Israel'
-    AND NOT EXISTS (
-        SELECT 
-            1
-        FROM 
-            your_table t2
-        WHERE 
-            t2.id = t1.id
-            AND t2.id_version = latest.max_version
-            AND t2.unit <> 'Israel'
-    )
+    AND t2.id IS NULL
 ORDER BY 
     t1.id_version DESC;
