@@ -1,29 +1,22 @@
-To pull changes from a branch that is not the `master` branch and has one different commit, you can follow these steps:
-
-1. **Checkout to Your Branch**: Make sure you are on the branch where you want to integrate the changes.
-   
-   ```bash
-   git checkout your-branch
-   ```
-
-2. **Fetch the Latest Changes**: Fetch the latest changes from the remote repository.
-
-   ```bash
-   git fetch origin
-   ```
-
-3. **Merge the Other Branch**: Merge the branch with the different commit into your current branch.
-
-   ```bash
-   git merge origin/branch-with-different-commit
-   ```
-
-   If there are no conflicts, this will integrate the commit from the other branch into your current branch. If there are conflicts, you'll need to resolve them manually.
-
-4. **Push Changes**: If you need to push the merged changes to the remote repository:
-
-   ```bash
-   git push origin your-branch
-   ```
-
-Replace `your-branch` with the name of your current branch and `branch-with-different-commit` with the name of the branch you want to pull changes from.
+SELECT 
+    t1.status,
+    t1.id,
+    t1.unit,
+    t1.id_version
+FROM 
+    your_table t1
+INNER JOIN (
+    SELECT 
+        t2.id,
+        MAX(t2.id_version) AS max_version
+    FROM 
+        your_table t2
+    GROUP BY 
+        t2.id
+) latest 
+    ON t1.id = latest.id 
+    AND t1.id_version = latest.max_version
+WHERE 
+    t1.unit = 'Israel'
+ORDER BY 
+    t1.id_version DESC;
