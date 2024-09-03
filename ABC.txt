@@ -1,27 +1,75 @@
-SELECT 
-    t1.status,
-    t1.id,
-    t1.unit,
-    t1.id_version
-FROM 
-    your_table t1
-JOIN (
-    SELECT 
-        id,
-        MAX(id_version) AS max_version
-    FROM 
-        your_table
-    GROUP BY 
-        id
-) latest 
-    ON t1.id = latest.id 
-    AND t1.id_version = latest.max_version
-LEFT JOIN your_table t2 
-    ON t1.id = t2.id 
-    AND t1.id_version = t2.id_version 
-    AND t2.unit <> 'Israel'
-WHERE 
-    t1.unit = 'Israel'
-    AND t2.id IS NULL
-ORDER BY 
-    t1.id_version DESC;
+Here's how you can structure the README file given that all three scripts are located in the `abc` folder:
+
+---
+
+# Project Name: [Your Project Name]
+
+## Overview
+
+This repository contains Python scripts that handle different tasks such as data mapping, data loading, and report generation. All the scripts are located in the `abc` folder.
+
+## Folder Structure
+
+```plaintext
+├── abc/
+│   ├── mapping.py
+│   ├── load_data.py
+│   └── generate_report.py
+```
+
+### 1. `abc/mapping.py`
+
+This script is responsible for data mapping and transformations. It might include tasks like data cleaning, normalization, and restructuring to prepare data for analysis or further processing.
+
+#### Usage:
+
+To run this script, use the following command:
+
+```bash
+python abc/mapping.py
+```
+
+### 2. `abc/load_data.py`
+
+This script handles the loading of data from various sources, such as databases, APIs, or local files. It ensures that data is imported into the system in a consistent and usable format.
+
+#### Usage:
+
+To run this script, use the following command:
+
+```bash
+python abc/load_data.py
+```
+
+### 3. `abc/generate_report.py`
+
+This script is used to generate reports based on the processed data. It can create summaries, visualizations, or other forms of reports required for the project.
+
+#### Usage:
+
+To run this script, use the following command:
+
+```bash
+python abc/generate_report.py
+```
+
+## Requirements
+
+Make sure you have the following dependencies installed:
+
+- Python 3.x
+- [List of any Python packages required, e.g., pandas, numpy, matplotlib]
+
+You can install the required packages using `pip`:
+
+```bash
+pip install -r requirements.txt
+```
+
+## Contact
+
+For any questions or issues, please contact [Your Name] at [Your Email].
+
+---
+
+This README provides a basic structure for users to understand what each script does and how to run them. You can expand on this depending on your project's specific requirements and details.
