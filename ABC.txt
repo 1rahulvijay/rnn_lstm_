@@ -1,3 +1,9 @@
+# Define the sender email and subject
+from_email = "sender@example.com"
+email_subject = "Original Subject"
+
+# Create the HTML content with a mailto link
+html_content = f"""
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -7,7 +13,37 @@
 </head>
 <body>
     <p>
-        Click <a href="mailto:{{from_email}}?subject=Re:%20{{email_subject}}">abc</a> to reply to this email.
+        Click <a href="mailto:{from_email}?subject=Re:%20{email_subject}">abc</a> to reply to this email.
     </p>
 </body>
 </html>
+"""
+
+# Print or save the HTML content
+print(html_content)
+
+# To send this as an email using smtplib
+import smtplib
+from email.mime.multipart import MIMEMultipart
+from email.mime.text import MIMEText
+
+# Define email parameters
+recipient_email = "recipient@example.com"
+subject = "Your Email Subject"
+
+# Create the message
+msg = MIMEMultipart("alternative")
+msg['From'] = from_email
+msg['To'] = recipient_email
+msg['Subject'] = subject
+
+# Attach the HTML content
+msg.attach(MIMEText(html_content, "html"))
+
+# Send the email
+with smtplib.SMTP('smtp.example.com', 587) as server:
+    server.starttls()
+    server.login("your_username", "your_password")
+    server.sendmail(from_email, recipient_email, msg.as_string())
+
+print("Email sent successfully!")
