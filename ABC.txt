@@ -1,75 +1,13 @@
-Here's how you can structure the README file given that all three scripts are located in the `abc` folder:
-
----
-
-# Project Name: [Your Project Name]
-
-## Overview
-
-This repository contains Python scripts that handle different tasks such as data mapping, data loading, and report generation. All the scripts are located in the `abc` folder.
-
-## Folder Structure
-
-```plaintext
-├── abc/
-│   ├── mapping.py
-│   ├── load_data.py
-│   └── generate_report.py
-```
-
-### 1. `abc/mapping.py`
-
-This script is responsible for data mapping and transformations. It might include tasks like data cleaning, normalization, and restructuring to prepare data for analysis or further processing.
-
-#### Usage:
-
-To run this script, use the following command:
-
-```bash
-python abc/mapping.py
-```
-
-### 2. `abc/load_data.py`
-
-This script handles the loading of data from various sources, such as databases, APIs, or local files. It ensures that data is imported into the system in a consistent and usable format.
-
-#### Usage:
-
-To run this script, use the following command:
-
-```bash
-python abc/load_data.py
-```
-
-### 3. `abc/generate_report.py`
-
-This script is used to generate reports based on the processed data. It can create summaries, visualizations, or other forms of reports required for the project.
-
-#### Usage:
-
-To run this script, use the following command:
-
-```bash
-python abc/generate_report.py
-```
-
-## Requirements
-
-Make sure you have the following dependencies installed:
-
-- Python 3.x
-- [List of any Python packages required, e.g., pandas, numpy, matplotlib]
-
-You can install the required packages using `pip`:
-
-```bash
-pip install -r requirements.txt
-```
-
-## Contact
-
-For any questions or issues, please contact [Your Name] at [Your Email].
-
----
-
-This README provides a basic structure for users to understand what each script does and how to run them. You can expand on this depending on your project's specific requirements and details.
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Email Template</title>
+</head>
+<body>
+    <p>
+        Click <a href="mailto:{{from_email}}?subject=Re:%20{{email_subject}}">abc</a> to reply to this email.
+    </p>
+</body>
+</html>
