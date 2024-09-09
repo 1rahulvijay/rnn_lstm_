@@ -1,49 +1,34 @@
-# Define the sender email and subject
-from_email = "sender@example.com"
-email_subject = "Original Subject"
+import pandas as pd
 
-# Create the HTML content with a mailto link
-html_content = f"""
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Email Template</title>
-</head>
-<body>
-    <p>
-        Click <a href="mailto:{from_email}?subject=Re:%20{email_subject}">abc</a> to reply to this email.
-    </p>
-</body>
-</html>
-"""
+# Example DataFrame with new column 'D'
+df = pd.DataFrame({
+    'A': [1, 2, 3],
+    'B': [4, 5, 6],
+    'C': [7, 8, 9],
+    'D': [10, 11, 12]  # This is a new column
+})
 
-# Print or save the HTML content
-print(html_content)
+# Predefined column order for known columns
+desired_order = ['B', 'A']  # Desired order for B and A, but maintain positions of other columns
 
-# To send this as an email using smtplib
-import smtplib
-from email.mime.multipart import MIMEMultipart
-from email.mime.text import MIMEText
+# Get the current columns of the DataFrame
+current_columns = df.columns.tolist()
 
-# Define email parameters
-recipient_email = "recipient@example.com"
-subject = "Your Email Subject"
+# Create a list for final ordered columns
+final_column_order = []
 
-# Create the message
-msg = MIMEMultipart("alternative")
-msg['From'] = from_email
-msg['To'] = recipient_email
-msg['Subject'] = subject
+# Iterate through current columns and add them in the desired order if in `desired_order`
+# or retain their original positions if not in `desired_order`
+for col in current_columns:
+    if col in desired_order:
+        # Add columns in the order they appear in `desired_order`
+        desired_col = [dcol for dcol in desired_order if dcol == col][0]
+        final_column_order.append(desired_col)
+    else:
+        # Maintain original position of any columns not in `desired_order`
+        final_column_order.append(col)
 
-# Attach the HTML content
-msg.attach(MIMEText(html_content, "html"))
+# Reorder the DataFrame based on the final column order
+df = df[final_column_order]
 
-# Send the email
-with smtplib.SMTP('smtp.example.com', 587) as server:
-    server.starttls()
-    server.login("your_username", "your_password")
-    server.sendmail(from_email, recipient_email, msg.as_string())
-
-print("Email sent successfully!")
+print(df)
