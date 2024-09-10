@@ -1,34 +1,20 @@
 import pandas as pd
 
-# Example DataFrame with new column 'D'
-df = pd.DataFrame({
-    'A': [1, 2, 3],
-    'B': [4, 5, 6],
-    'C': [7, 8, 9],
-    'D': [10, 11, 12]  # This is a new column
-})
+# Sample dataframe
+data = {
+    'id': ['abc123', 'def456', 'ghi789', 'jkl101', 'abc456'],
+    'value': [10, 20, 30, 40, 50]
+}
 
-# Predefined column order for known columns
-desired_order = ['B', 'A']  # Desired order for B and A, but maintain positions of other columns
+df = pd.DataFrame(data)
 
-# Get the current columns of the DataFrame
-current_columns = df.columns.tolist()
+# List of IDs you want to search for
+id_list = ['abc123', 'ghi789', 'abc456']
 
-# Create a list for final ordered columns
-final_column_order = []
+# Create a regex pattern by escaping special characters if necessary
+regex_pattern = '|'.join(map(re.escape, id_list))
 
-# Iterate through current columns and add them in the desired order if in `desired_order`
-# or retain their original positions if not in `desired_order`
-for col in current_columns:
-    if col in desired_order:
-        # Add columns in the order they appear in `desired_order`
-        desired_col = [dcol for dcol in desired_order if dcol == col][0]
-        final_column_order.append(desired_col)
-    else:
-        # Maintain original position of any columns not in `desired_order`
-        final_column_order.append(col)
+# Filter the dataframe using str.contains() and regex=True, handling NaNs
+filtered_df = df[df['id'].str.contains(regex_pattern, regex=True, na=False)]
 
-# Reorder the DataFrame based on the final column order
-df = df[final_column_order]
-
-print(df)
+print(filtered_df)
