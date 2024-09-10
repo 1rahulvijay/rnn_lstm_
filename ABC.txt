@@ -1,20 +1,26 @@
 import pandas as pd
 
 # Example dataframe
-data = {'Id': ['1001,223,3344', '123, 223, 4567', '789, 1001, 223']}
+data = {'Id': ['1111,11114,1115627,17173672,1882921', 
+               '128379', 
+               '123,4567,11114,17173672', 
+               '789,888,555,1882921', 
+               '1001']}
+
 df = pd.DataFrame(data)
 
-# Ensure the Id column is treated as strings
-df['Id'] = df['Id'].astype(str)
-
 # List of IDs to search for
-id_list = ['1001', '223', '3344']
+id_list = ['1111', '1882921', '128379']
 
-# Create a regex pattern from the list of IDs (handle spaces if they exist)
-pattern = '|'.join([f"\\b{id}\\b" for id in id_list])
+# Function to check if any ID from id_list is in the row
+def contains_ids(row, id_list):
+    # Split the Ids in the row by comma, and remove any extra spaces
+    ids_in_row = row.split(',') if ',' in row else [row]
+    # Check if any ID from id_list is present in the row
+    return any(id.strip() in ids_in_row for id in id_list)
 
-# Filter rows where 'Id' column contains any of the IDs in the list
-df_filtered = df[df['Id'].str.contains(pattern, regex=True)]
+# Apply the function to the 'Id' column
+df_filtered = df[df['Id'].apply(contains_ids, id_list=id_list)]
 
 # Display the filtered DataFrame
 print(df_filtered)
