@@ -1,20 +1,20 @@
 import pandas as pd
 
-# Sample dataframe
-data = {
-    'id': ['abc123', 'def456', 'ghi789', 'jkl101', 'abc456'],
-    'value': [10, 20, 30, 40, 50]
-}
-
+# Example dataframe
+data = {'Id': ['1001,223,3344', '123, 223, 4567', '789, 1001, 223']}
 df = pd.DataFrame(data)
 
-# List of IDs you want to search for
-id_list = ['abc123', 'ghi789', 'abc456']
+# Ensure the Id column is treated as strings
+df['Id'] = df['Id'].astype(str)
 
-# Create a regex pattern by escaping special characters if necessary
-regex_pattern = '|'.join(map(re.escape, id_list))
+# List of IDs to search for
+id_list = ['1001', '223', '3344']
 
-# Filter the dataframe using str.contains() and regex=True, handling NaNs
-filtered_df = df[df['id'].str.contains(regex_pattern, regex=True, na=False)]
+# Create a regex pattern from the list of IDs (handle spaces if they exist)
+pattern = '|'.join([f"\\b{id}\\b" for id in id_list])
 
-print(filtered_df)
+# Filter rows where 'Id' column contains any of the IDs in the list
+df_filtered = df[df['Id'].str.contains(pattern, regex=True)]
+
+# Display the filtered DataFrame
+print(df_filtered)
