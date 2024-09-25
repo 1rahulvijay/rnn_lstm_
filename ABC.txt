@@ -1,31 +1,12 @@
-import pandas as pd
-
-# Example dataframe
-data = {'Id': ['1111,11114,1115627,17173672,1882921', 
-               '128379', 
-               '123,4567,11114,17173672', 
-               '789,888,555,1882921', 
-               '1001']}
-
-df = pd.DataFrame(data)
-
-# List of IDs to search for
-id_list = ['1111', '1882921', '128379', '5555', '9999']
-
-# Function to get all unique IDs from the dataframe
-def get_all_ids(df):
-    all_ids = set()
-    for row in df['Id']:
-        # Split the Ids in the row by comma and strip any extra spaces
-        ids_in_row = [id.strip() for id in row.split(',')]
-        all_ids.update(ids_in_row)
-    return all_ids
-
-# Get all unique IDs found in the DataFrame
-found_ids = get_all_ids(df)
-
-# Find which IDs from id_list are not present in the DataFrame
-missing_ids = [id for id in id_list if id not in found_ids]
-
-# Display the missing IDs
-print("IDs not found in the DataFrame:", missing_ids)
+SELECT 
+    e1.employee_name AS Employee,
+    e1.manager_name AS Direct_Manager,
+    e2.manager_name AS Manager_of_Direct_Manager,
+    e3.manager_name AS Manager_of_Manager,
+    e4.manager_name AS Manager_of_Manager_of_Manager,
+    e5.manager_name AS Manager_of_Manager_of_Manager_of_Manager
+FROM employees e1
+LEFT JOIN employees e2 ON e1.manager_name = e2.employee_name
+LEFT JOIN employees e3 ON e2.manager_name = e3.employee_name
+LEFT JOIN employees e4 ON e3.manager_name = e4.employee_name
+LEFT JOIN employees e5 ON e4.manager_name = e5.employee_name;
