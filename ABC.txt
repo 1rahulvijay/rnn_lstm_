@@ -1,12 +1,24 @@
 SELECT 
-    e1.employee_name AS Employee,
-    e1.manager_name AS Direct_Manager,
-    e2.manager_name AS Manager_of_Direct_Manager,
-    e3.manager_name AS Manager_of_Manager,
-    e4.manager_name AS Manager_of_Manager_of_Manager,
-    e5.manager_name AS Manager_of_Manager_of_Manager_of_Manager
-FROM employees e1
-LEFT JOIN employees e2 ON e1.manager_name = e2.employee_name
-LEFT JOIN employees e3 ON e2.manager_name = e3.employee_name
-LEFT JOIN employees e4 ON e3.manager_name = e4.employee_name
-LEFT JOIN employees e5 ON e4.manager_name = e5.employee_name;
+    e.employee_name AS employee_name,
+    m1.employee_name AS manager_level_1,
+    m2.employee_name AS manager_level_2,
+    m3.employee_name AS manager_level_3,
+    m4.employee_name AS manager_level_4,
+    m5.employee_name AS manager_level_5,
+    m6.employee_name AS manager_level_6
+FROM 
+    employee e
+LEFT JOIN 
+    manager mgr ON e.employee_id = mgr.employee_id
+LEFT JOIN 
+    employee m1 ON mgr.manager_id_1 = m1.employee_id
+LEFT JOIN 
+    employee m2 ON mgr.manager_id_2 = m2.employee_id
+LEFT JOIN 
+    employee m3 ON mgr.manager_id_3 = m3.employee_id
+LEFT JOIN 
+    employee m4 ON mgr.manager_id_4 = m4.employee_id
+LEFT JOIN 
+    employee m5 ON mgr.manager_id_5 = m5.employee_id
+LEFT JOIN 
+    employee m6 ON mgr.manager_id_6 = m6.employee_id;
