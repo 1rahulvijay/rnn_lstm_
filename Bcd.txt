@@ -1,92 +1,13 @@
-from airflow import DAG
-from airflow.operators.dummy import DummyOperator
-from airflow.operators.bash import BashOperator
-from airflow.operators.python import PythonOperator
-from airflow.operators.papermill import PapermillOperator
-from airflow.utils import timezone
-from datetime import datetime, timedelta
 
-class MyDAG:
-    def __init__(self, dag_id, schedule, default_args, operator_params=None, tz='UTC'):
-        self.dag_id = dag_id
-        self.schedule = schedule
-        self.default_args = default_args
-        self.operator_params = operator_params or {}
-        self.timezone = timezone(tz)
-        self.dag = self.create_dag()
-
-    def create_dag(self):
-        with DAG(
-            dag_id=self.dag_id,
-            default_args=self.default_args,
-            schedule_interval=self.schedule,
-            catchup=False,
-            timezone=self.timezone
-        ) as dag:
-            start = DummyOperator(task_id='start')
-            end = DummyOperator(task_id='end')
-            
-            if 'bash' in self.operator_params:
-                bash_params = self.operator_params['bash']
-                run_bash = BashOperator(
-                    task_id='run_bash_script',
-                    bash_command=bash_params.get('bash_command', 'echo "Hello from bash script"'),
-                )
-                start >> run_bash >> end
-
-            if 'python' in self.operator_params:
-                python_params = self.operator_params['python']
-                run_python = PythonOperator(
-                    task_id='run_python_script',
-                    python_callable=python_params.get('python_callable', self.print_hello),
-                )
-                start >> run_python >> end
-
-            if 'papermill' in self.operator_params:
-                papermill_params = self.operator_params['papermill']
-                run_papermill = PapermillOperator(
-                    task_id='run_papermill_notebook',
-                    input_nb=papermill_params.get('input_nb', '/path/to/input_notebook.ipynb'),
-                    output_nb=papermill_params.get('output_nb', '/path/to/output_notebook.ipynb'),
-                    parameters=papermill_params.get('parameters', {})
-                )
-                start >> run_papermill >> end
-
-        return dag
-
-    @staticmethod
-    def print_hello():
-        print("Hello, world!")
-
-# Example usage
-default_args = {
-    'owner': 'airflow',
-    'depends_on_past': False,
-    'start_date': datetime(2023, 1, 1),
-    'email_on_failure': False,
-    'email_on_retry': False,
-    'retries': 1,
-    'retry_delay': timedelta(minutes=5),
-}
-
-# Define operator parameters
-operator_params = {
-    'bash': {
-        'bash_command': 'echo "Custom Bash command"',
-    },
-    'python': {
-        'python_callable': MyDAG.print_hello,
-    },
-    'papermill': {
-        'input_nb': '/path/to/input_notebook.ipynb',
-        'output_nb': '/path/to/output_notebook.ipynb',
-        'parameters': {'parameter_name': 'parameter_value'}
-    }
-}
-
-# Instantiate the class with time zone
-dag = MyDAG(dag_id='my_custom_dag', schedule='@daily', default_args=default_args, operator_params=operator_params, tz='Europe/London')
-
-# Access the created DAG
-dag_instance = dag.dag
-                    
+SELECT 
+    employee_name,
+    hire_date,
+    status,
+    CASE 
+        WHEN status = 'terminated' THEN 'Terminated'
+        ELSE TO_CHAR(TRUNC(MONTHS_BETWEEN(SYSDATE, hire_date) / 12)) || ' years, ' ||
+             TO_CHAR(TRUNC(MOD(MONTHS_BETWEEN(SYSDATE, hire_date), 12))) || ' months, ' ||
+             TO_CHAR(SYSDATE - ADD_MONTHS(hire_date, TRUNC(MONTHS_BETWEEN(SYSDATE, hire_date)))) || ' days'
+    END AS employment_duration
+FROM 
+    employee;
