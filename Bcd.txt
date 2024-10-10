@@ -1,13 +1,9 @@
 
 SELECT 
-    employee_name,
-    hire_date,
-    status,
-    CASE 
-        WHEN status = 'terminated' THEN 'Terminated'
-        ELSE TO_CHAR(TRUNC(MONTHS_BETWEEN(SYSDATE, hire_date) / 12)) || ' years, ' ||
-             TO_CHAR(TRUNC(MOD(MONTHS_BETWEEN(SYSDATE, hire_date), 12))) || ' months, ' ||
-             TO_CHAR(SYSDATE - ADD_MONTHS(hire_date, TRUNC(MONTHS_BETWEEN(SYSDATE, hire_date)))) || ' days'
-    END AS employment_duration
+    COALESCE(t2.unit_code, t1.unit_code) AS unit_code
 FROM 
-    employee;
+    table1 t1
+LEFT JOIN 
+    table2 t2 
+ON 
+    t1.unit_code = t2.unit_code;
