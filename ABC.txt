@@ -1,5 +1,1 @@
-TRIM(CONCAT(
-    SPLIT([Manager Name], ", ", 2),
-    " ",
-    SPLIT([Manager Name], ", ", 1)
-))
+TRIM(SPLIT([Manager Name], ", ", 2) + " " + SPLIT([Manager Name], ", ", 1))
