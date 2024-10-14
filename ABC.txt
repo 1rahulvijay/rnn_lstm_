@@ -1,1 +1,20 @@
-TRIM(SPLIT([Manager Name], ", ", 2) + " " + SPLIT([Manager Name], ", ", 1))
+IF (
+    USERNAME() IN ([Manager_level_4], [Manager_level_5], [Manager_level_6], [Manager_level_7])
+) THEN 1
+ELSE 0
+
+
+END
+
+
+IF 
+    USERNAME() = [Manager_level_4] THEN 1
+ELSEIF 
+    USERNAME() = [Manager_level_5] AND [Manager_level_4] = USERNAME() THEN 1
+ELSEIF 
+    USERNAME() = [Manager_level_6] AND [Manager_level_5] = USERNAME() THEN 1
+ELSEIF 
+    USERNAME() = [Manager_level_7] AND [Manager_level_6] = USERNAME() THEN 1
+ELSE 
+    0
+END
