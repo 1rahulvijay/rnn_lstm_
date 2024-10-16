@@ -1,11 +1,24 @@
-IF 
-    USERNAME() = [MANAGER_LEVEL_4_SOEID] THEN 1
-ELSEIF 
-    USERNAME() = [MANAGER_LEVEL_5_SOEID] AND [MANAGER_LEVEL_4_SOEID] = [MANAGER_LEVEL_4_SOEID] THEN 1
-ELSEIF 
-    USERNAME() = [MANAGER_LEVEL_6_SOEID] AND [MANAGER_LEVEL_5_SOEID] = [MANAGER_LEVEL_5_SOEID] THEN 1
-ELSEIF 
-    USERNAME() = [MANAGER_LEVEL_7_SOEID] AND [MANAGER_LEVEL_6_SOEID] = [MANAGER_LEVEL_6_SOEID] THEN 1
-ELSE 
-    0
-END
+import os
+import pandas as pd
+
+# Initialize an empty list to store dataframes
+df_list = []
+
+# Specify the root directory where the folders are located
+root_dir = 'path_to_your_main_directory'
+
+# Walk through all directories and subdirectories
+for subdir, _, files in os.walk(root_dir):
+    for file in files:
+        if file == "Change.csv":  # Check if the file is named "Change.csv"
+            file_path = os.path.join(subdir, file)
+            # Read the CSV and append to the list
+            df = pd.read_csv(file_path)
+            df_list.append(df)
+
+# Concatenate all DataFrames
+if df_list:
+    concatenated_df = pd.concat(df_list, ignore_index=True)
+    print(concatenated_df)
+else:
+    print("No 'Change.csv' files found.")
