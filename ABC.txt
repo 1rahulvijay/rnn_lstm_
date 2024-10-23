@@ -1,4 +1,2 @@
-
-IF COUNT([Request_id]) = 0 THEN "No data available for your user level."
-ELSE ""
-END
+# Example: Merge on a common key (e.g., 'id')
+new_list_of_dfs = [pd.merge(df, solo_df, on='id', how='left') for df in list_of_dfs]
